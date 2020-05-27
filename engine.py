@@ -28,7 +28,7 @@ INF_RADIUS = 30
 
 INF_PROB = 0.5
 
-NO_PEOPLE = 10
+NO_PEOPLE = 20
 NO_INITIAL_INFECTED = 2
 
 no_infected = NO_INITIAL_INFECTED
@@ -61,6 +61,8 @@ def distance(p1, p2):
     return math.sqrt((p2.x - p1.x)**2 + (p2.y - p1.y)**2)
 
 def spreadInfection():
+    global no_infected
+    new_infected = 0
     for i in range(no_infected, NO_PEOPLE):
         # se non sei infetto, per ogni infetto controlla se sei nella sua zona di infezione
         for j in range(no_infected):
@@ -68,7 +70,12 @@ def spreadInfection():
                 # se sei dentro, lancia il dado
                 if (random.random()>INF_PROB):
                     people[i].status =  INFECTED #generare asintomatici!!
-    people.sort(key = lambda x: x.status, reverse=True)
+                    new_infected += 1
+
+    
+    if new_infected>0:
+        no_infected += new_infected
+        people.sort(key = lambda x: x.status, reverse=True)
 
 def update():
     # prima aggiorniamo le posizioni delle persone
@@ -85,7 +92,7 @@ def render():
         pygame.draw.circle(screen, color[person.status], (person.x, person.y), INF_RADIUS, 1)
     
     font = pygame.font.Font(None, 36)
-    text = font.render("time " + str(time), 1, (255, 255, 255))
+    text = font.render("time " + str(time) + " infected: " + str(no_infected), 1, (255, 255, 255))
     textpos = text.get_rect(centerx = WIDTH/2)
     screen.blit(text, textpos)
     pygame.display.update()
