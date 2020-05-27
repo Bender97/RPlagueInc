@@ -12,7 +12,7 @@ BLACK = (0, 0, 0)
 SUSCEPTIBLE = 0
 INFECTED = 1
 ASYMPTOMATIC = 2
-HEALED = 3
+RECOVERED = 3
 DEAD = 4
 
 color = [
@@ -21,7 +21,7 @@ color = [
     (255, 255, 0), # YELLOW
     (50, 255, 50) # GREEN
     ]
-    # no color for the dead (removed)
+    # no color for the dead (not drawn anymore)
 
 CIRCLE_RADIUS = 5
 INF_RADIUS = 30
@@ -39,7 +39,7 @@ pygame.display.set_caption('City')
 fps = pygame.time.Clock()
 paused = False
 
-# Ball setup [x, y] = [col, row]
+# person setup [x, y] = [col, row]
 people = []
 time = 0
 
@@ -49,33 +49,49 @@ def generateWalkers():
 
 def generateInfected():
     if (NO_INITIAL_INFECTED > NO_PEOPLE):
-        print("troppi infettati, sono pi delle persone disponibili!")
+        print("troppi infettati, sono più delle persone disponibili!")
         exit()
     infected = random.sample(people, NO_INITIAL_INFECTED)
     for person in infected:
         person.status = INFECTED
+        person.TTD = 0
 
     people.sort(key = lambda x: x.status, reverse=True)
+
+def getSick():
+
+    global no_infected
+    global people
+
+    new_infected = 0
+
+    for i in range(no_infected, NO_PEOPLE):
+        if people[i].TTD>0:
+            people[i].TTD -= 1
+        elif people[i].TTD == 0:
+            people[i].status =  INFECTED # generare asintomatici!!
+            new_infected += 1
+
+    if new_infected>0:
+        no_infected += new_infected
+        people.sort(key = lambda x: x.status, reverse=True)
 
 def distance(p1, p2):
     return math.sqrt((p2.x - p1.x)**2 + (p2.y - p1.y)**2)
 
 def spreadInfection():
-    global no_infected
-    new_infected = 0
+       
     for i in range(no_infected, NO_PEOPLE):
         # se non sei infetto, per ogni infetto controlla se sei nella sua zona di infezione
         for j in range(no_infected):
             if (distance(people[i], people[j]) < INF_RADIUS):
                 # se sei dentro, lancia il dado
                 if (random.random()>INF_PROB):
-                    people[i].status =  INFECTED #generare asintomatici!!
-                    new_infected += 1
+                    people[i].TTD = random.randint(0, 14) # Time To Disease
+                    
 
     
-    if new_infected>0:
-        no_infected += new_infected
-        people.sort(key = lambda x: x.status, reverse=True)
+    
 
 def update():
     # prima aggiorniamo le posizioni delle persone
@@ -83,7 +99,12 @@ def update():
     for person in people:
         person.update(WIDTH, HEIGHT)
 
+    getSick()
+
     spreadInfection()
+
+    for i in range(len(people)):
+        print("[" + str(i) + "]: " + str(people[i].TTD))
 
 def render():
     screen.fill(BLACK)
