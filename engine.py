@@ -87,7 +87,7 @@ def spreadInfection():
             if (distance(people[i], people[j]) < INF_RADIUS):
                 # se sei dentro, lancia il dado
                 if (random.random()>INF_PROB):
-                    people[i].TTD = random.randint(0, 14) # Time To Disease
+                    people[i].TTD = random.randint(5, 14) # Time To Disease
                     
 
     
@@ -108,11 +108,19 @@ def update():
 
 def render():
     screen.fill(BLACK)
+
+    font = pygame.font.Font(None, 36)
+    
     for person in people:
         pygame.draw.circle(screen, color[person.status], (person.x, person.y), CIRCLE_RADIUS, 0)
         pygame.draw.circle(screen, color[person.status], (person.x, person.y), INF_RADIUS, 1)
+
+        if (person.TTD>0):
+            t = font.render(str(person.TTD), 1, (50, 255, 50))
+            tp = t.get_rect(centerx = person.x, centery = person.y)
+            screen.blit(t, tp)
     
-    font = pygame.font.Font(None, 36)
+    
     text = font.render("time " + str(time) + " infected: " + str(no_infected), 1, (255, 255, 255))
     textpos = text.get_rect(centerx = WIDTH/2)
     screen.blit(text, textpos)
