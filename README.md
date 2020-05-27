@@ -11,7 +11,7 @@ pip install pygame
 
 
 Further works:
-- introdurre tempo di incubazione
+- introdurre tempo di incubazione   ---- fatto
     - dopo quanto tempo sviluppi la malattia?
 - introdurre asintomatici
     - probabilità di diventare asintomatico piuttosto che ammalarsi davvero
