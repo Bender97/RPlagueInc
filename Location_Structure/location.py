@@ -36,8 +36,9 @@ class Location:
 
         self.walkers = []
 
-        self.no_infected = 0 # numero iniziale di ammalati
+        self.no_infected = 0 # number of infected
 
+        # variables for rendering
         self.screen = None
         self.fps = 0
         self.paused = False
@@ -74,8 +75,16 @@ class Location:
     # end exit
 
     def update(self, virus):
+        '''
+        update the context inside the location ( a minute (or second, must decide) of life , for each update call)
+
+        Parameters
+        ----------
+        virus: Virus
+            the virus spreading
+        '''
+        # UPDATE THE POSITION OF EACH WALKER
         for walker in self.walkers:
-            #walker.update(self.width, self.height)
             tempx = walker.x + random.randint(-10, 10)
             tempy = walker.y + random.randint(-10, 10)
 
@@ -84,25 +93,28 @@ class Location:
             
             walker.move(tempx, tempy)
 
-        #self.spreadInfection()
+        # CHECK FOR EACH WALKER IF IT's CLOSE TO AN INFECTED
+        #   IF SO -> ROLL
 
         new_infected = 0
         
         for i in range(self.no_infected, len(self.walkers)):
-            # se non sei infetto, per ogni infetto controlla se sei nella sua zona di infezione
             for j in range(self.no_infected):
                 if (distance(self.walkers[i], self.walkers[j]) < virus.range):
-                    # se sei dentro, lancia il dado
                     new_infected += virus.tryInfection(self.walkers[i])
 
-
+        # UPDATE THE COUNTER
         if (new_infected>0):
             self.no_infected += new_infected
             self.walkers.sort(key = lambda x: x.status, reverse=True)
 
     # end update
 
+
     def initRendering(self):
+        '''
+        Init the rendering engine
+        '''
         pygame.init()
         self.screen = pygame.display.set_mode((self.size_x, self.size_y))
         pygame.display.set_caption('City')
@@ -110,6 +122,14 @@ class Location:
         self.paused = False
 
     def render(self, virus):
+        '''
+        render the current situation
+
+        Parameters
+        ----------
+        virus: Virus
+            the virus spreading
+        '''
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -126,15 +146,6 @@ class Location:
                 pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), 5, 0)
                 pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), int(virus.range/2), 1)
 
-                #if (walker.TTD>0):
-                #    t = font.render(str(walker.TTD), 1, (50, 255, 50))
-                #    tp = t.get_rect(centerx = walker.x, centery = walker.y)
-                #    self.screen.blit(t, tp)
-            
-            
-            #text = font.render("time " + str(self.time) + " infected: " + str(self.no_infected), 1, (255, 255, 255))
-            #textpos = text.get_rect(centerx = WIDTH/2)
-            #self.screen.blit(text, textpos)
             pygame.display.update()
             self.fps.tick(30)
 
