@@ -15,4 +15,13 @@ Further works:
     - dopo quanto tempo sviluppi la malattia?
 - introdurre asintomatici
     - probabilità di diventare asintomatico piuttosto che ammalarsi davvero
-- morte
+        - idea: se sai di aver preso il virus, le probabilità di essere asintomatico sono:
+            - bambini -> P(asintomatico) = 4/5
+            - adulti  -> P(asintomatico) = 2/5
+            - anziani -> P(asintomatico) = 1/5
+- morte (perché rimuoverli dal gioco non va bene)
+    - dopo quanto tempo puoi morire, se muori?
+        - if asintomatico: P(morte) = 0
+        - elif ammalato: P(morte) = 0.03
+    - morte di parente -> malcontento aumenta, e anche la disobbedienza
+    
