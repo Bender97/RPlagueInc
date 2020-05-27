@@ -8,3 +8,11 @@ pip install pygame
     Walker.py - le personcine che si muovono<br>
     
     tutti gli altri file: lasciateli perdere per ora, roba vecchia
+
+
+Further works:
+- introdurre tempo di incubazione
+    - dopo quanto tempo sviluppi la malattia?
+- introdurre asintomatici
+    - probabilità di diventare asintomatico piuttosto che ammalarsi davvero
+- morte
