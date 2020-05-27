@@ -24,4 +24,8 @@ Further works:
         - if asintomatico: P(morte) = 0
         - elif ammalato: P(morte) = 0.03
     - morte di parente -> malcontento aumenta, e anche la disobbedienza
-    
+
+
+
+ROBA IN PIU':
+    - aggiungere edificio: ospedale
