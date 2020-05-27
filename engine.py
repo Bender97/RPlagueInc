@@ -25,6 +25,7 @@ CIRCLE_RADIUS = 5
 INF_RADIUS = 30
 
 NO_PEOPLE = 10
+NO_INITIAL_INFECTED = 2
 
 pygame.init()
 screen = pygame.display.set_mode(SCREEN_SIZE)
@@ -39,6 +40,14 @@ def generateWalkers():
 	for i in range(NO_PEOPLE):
 		people.append(Walker(WIDTH, HEIGHT))
 
+def generateInfected():
+	if (NO_INITIAL_INFECTED > NO_PEOPLE):
+		print("troppi infettati, sono pi delle persone disponibili!")
+		exit()
+	infected = random.sample(people, NO_INITIAL_INFECTED)
+	for person in infected:
+		person.status = INFECTED
+
 def update():
 	for person in people:
 		person.update(WIDTH, HEIGHT)
@@ -48,15 +57,13 @@ def render():
     for person in people:
     	pygame.draw.circle(screen, color[person.status], (person.x, person.y), CIRCLE_RADIUS, 0)
     	pygame.draw.circle(screen, color[person.status], (person.x, person.y), INF_RADIUS, 1)
-    #pygame.draw.circle(screen, WHITE, person2, CIRCLE_RADIUS, 0)
-    #pygame.draw.circle(screen, GREEN, person3, CIRCLE_RADIUS, 0)
     pygame.display.update()
     fps.tick(30)
 
 
 generateWalkers()
 
-
+generateInfected()
 
 while True:
     for event in pygame.event.get():
