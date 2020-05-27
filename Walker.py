@@ -21,6 +21,7 @@ class Walker:
 		self.status = SUSCEPTIBLE
 
 	def update(self, width, height):
+
 		tempx = self.x + random.randint(-10, 10)
 		tempy = self.y + random.randint(-10, 10)
 		
