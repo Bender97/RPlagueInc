@@ -1,6 +1,6 @@
 import random
 
-import healthState as h
+import structures.healthState as h
 
 
 class Walker:

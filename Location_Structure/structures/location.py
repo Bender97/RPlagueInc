@@ -1,10 +1,10 @@
 import pygame
 import sys
 import random
-from Walker import Walker
+from structures.Walker import Walker
 
 import math
-import healthState as h
+import structures.healthState as h
 
 BLACK = (0, 0, 0)
 

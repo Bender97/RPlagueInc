@@ -1,5 +1,5 @@
-import Walker
-import healthState as h
+import structures.Walker
+import structures.healthState as h
 import random
 import numpy as np
 
