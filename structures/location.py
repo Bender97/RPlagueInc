@@ -104,7 +104,7 @@ class Location:
                 if (distance(self.walkers[i], self.walkers[j]) < virus.range):
                     new_infected += virus.tryInfection(self.walkers[i])
 
-        # UPDATE THE COUNTER
+        # UPDATE no_infected AND SORT walkers
         if (new_infected>0):
             self.no_infected += new_infected
             self.walkers.sort(key = lambda x: x.status, reverse=True)

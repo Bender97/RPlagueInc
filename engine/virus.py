@@ -12,12 +12,34 @@ class Virus:
 
     def tryInfection(self,walker):
         if random.random() < self.pInfection:
-            walker.setStatus(h.INFECTED)
+            walker.setStatus(h.INCUBATION)
             return 1
         else:
             return 0
 
-    def computeDmg(self,walkerData): #walkerData contiene un vettore a cui verrà applicato il prodotto scalare con healthParams
-        return np.inner(self.healthParams,walkerData)
+    def tryDisease(self, walker):
+        if (walker.status!=h.INCUBATION):
+            print("error in tryDisease: trying to infect a person without virus incubation")
+            exit(1)
+        if random.random() < walker.pDisease:
+            walker.setStatus(h.INFECTED)
+            return 1
+        else:
+            walker.setStatus(h.ASYMPTOMATIC)
+            return 0
+
+    def tryDeath(self, walker):
+        if (walker.status!=h.INFECTED):
+            print("error in tryDeath: trying to kill a person without virus infection!")
+            exit(1)
+        if random.random() < walker.pDeath:
+            walker.setStatus(h.DEAD)
+            return 1
+        else:
+            walker.setStatus(h.RECOVERED)
+            return 0
+    # commented FOR FURTHER WORKS
+    #def computeDmg(self,walkerData): #walkerData contiene un vettore a cui verrà applicato il prodotto scalare con healthParams
+    #    return np.inner(self.healthParams,walkerData)
 
 
