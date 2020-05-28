@@ -34,7 +34,7 @@ class Walker:
             if walker.hasGoodHealth():
                 self.pDisease = 0.015
                 self.pDeath = 0.03
-            elif walker.hasBaddHealth():
+            elif walker.hasBadHealth():
                 self.pDisease = 0.025
                 self.pDeath = 0.04
             else:
@@ -44,7 +44,7 @@ class Walker:
             if walker.hasGoodHealth():
                 self.pDisease = 0.02
                 self.pDeath = 0.03
-            elif walker.hasBaddHealth():
+            elif walker.hasBadHealth():
                 self.pDisease = 0.035
                 self.pDeath = 0.04
             else:
