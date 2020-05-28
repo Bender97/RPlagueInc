@@ -108,9 +108,10 @@ class Location:
             # 2) tryDisease()
 
             for incubated in self.walkers[h.INCUBATION]:
-                if (incubated.getVirusTimer()>0):
-                    incubated.updateVirusTimer()
-                else:
+#                if (incubated.getVirusTimer()>0):
+#                    incubated.updateVirusTimer()
+#                else:
+                if (not incubated.getVirusTimer()):
                     flag, period = virus.tryDisease(incubated)
                     incubated.updateVirusTimer(period)
                     self.walkers[h.INCUBATION].remove(incubated)
@@ -120,7 +121,7 @@ class Location:
                         self.walkers[h.ASYMPTOMATIC].append(incubated)
 
             # 3) tryDeath()
-
+            '''    
             for infected in self.walkers[h.INFECTED]:
                 if (infected.getVirusTimer()>0):
                     infected.updateVirusTimer()
@@ -134,13 +135,13 @@ class Location:
                         print("+1 DEAD")
                     else:
                         self.walkers[h.RECOVERED].append(infected)
-
+            '''
             # 4) tryRecovering()
 
             for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
-                if (asymptomatic.getVirusTimer()>0):
-                    asymptomatic.updateVirusTimer()
-                else:
+#                if (asymptomatic.getVirusTimer()>0):
+#                    asymptomatic.updateVirusTimer()
+                if (not asymptomatic.getVirusTimer()):
                     self.walkers[h.ASYMPTOMATIC].remove(asymptomatic)
                     self.walkers[h.RECOVERED].append(asymptomatic)
                     asymptomatic.setStatus(h.RECOVERED)
