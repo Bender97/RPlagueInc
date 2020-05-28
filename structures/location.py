@@ -130,6 +130,7 @@ class Location:
 
                 if (flag):
                     self.walkers[h.DEAD].append(infected)
+                    print("+1 DEAD")
                 else:
                     self.walkers[h.RECOVERED].append(infected)
 
