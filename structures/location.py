@@ -42,8 +42,6 @@ class Location:
         for i in range(6):
             self.walkers.append([])
 
-        self.no_infected = 0 # number of infected
-
         # variables for rendering
         self.screen = None
         self.fps = 0
@@ -143,6 +141,7 @@ class Location:
             else:
                 self.walkers[h.ASYMPTOMATIC].remove(asymptomatic)
                 self.walkers[h.RECOVERED].append(asymptomatic)
+                asymptomatic.setStatus(h.RECOVERED)
 
 
         # 5) tryInfection()
