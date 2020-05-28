@@ -15,7 +15,7 @@ loc.initRendering()
 
 for i in range(10):
                     
-    walker = Walker(640,  # loc_width
+    walker = Walker( 640, # loc_width
                      480, # loc_height
                      random.randint(1, 100), # age
                      1,   # disobedience
@@ -24,7 +24,7 @@ for i in range(10):
     
     if (random.random()<0.2):
         walker.setStatus(h.INCUBATION)
-        walker.updateVirusTimer(random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1]))
+        walker.updateVirusTimer(value = random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1]))
 
     loc.enter(walker)
 

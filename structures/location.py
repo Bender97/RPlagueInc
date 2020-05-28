@@ -112,7 +112,7 @@ class Location:
 #                else:
                 if (not incubated.getVirusTimer()):
                     flag, period = virus.tryDisease(incubated)
-                    incubated.updateVirusTimer(period)
+                    incubated.updateVirusTimer(value = period)
                     self.walkers[h.INCUBATION].remove(incubated)
                     if (flag): # disease
                         self.walkers[h.INFECTED].append(incubated)
@@ -165,7 +165,7 @@ class Location:
                             if (flag):
                                 break   # non ha senso fare altri controlli
                 if flag:
-                    susceptible.updateVirusTimer(flag)
+                    susceptible.updateVirusTimer(value = flag)
                     self.walkers[h.INCUBATION].append(susceptible)
                     self.walkers[h.SUSCEPTIBLE].remove(susceptible)
 
