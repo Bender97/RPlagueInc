@@ -9,11 +9,16 @@ class Walker:
         self.status = h.SUSCEPTIBLE
         self.x = random.randint(0,width)
         self.y = random.randint(0,height)
-        self.healthLevel = random.uniform(0.7, 1)
+        self.healthLevel = random.uniform(0.2, 1)
         self.healingLevel = 0 # tasso di guarigione DAL VIRUS
         self.age = age
         self.disobedience = disobedience
         self.home = home
+
+        # Time To Live (it's just a countdown)
+
+        self.TTL = -1
+
         # just for testing, 2 lines to be deleted
         self.pDisease = 0
         self.pDeath = 0
@@ -21,34 +26,34 @@ class Walker:
         # maybe this part should be delegated to a function
         if self.isChild():
             if self.hasGoodHealth():
-                self.pDisease = 0.02
+                self.pDisease = 0.9
                 self.pDeath = 0
             elif self.hasBadHealth():
-                self.pDisease = 0.002
+                self.pDisease = 0.7
                 self.pDeath = 0.005
             else:
-                self.pDisease = 0.04
+                self.pDisease = 0.8
                 self.pDeath = 0.02
 
         elif self.isElder():
             if self.hasGoodHealth():
-                self.pDisease = 0.015
+                self.pDisease = 0.4
                 self.pDeath = 0.03
             elif self.hasBadHealth():
-                self.pDisease = 0.025
+                self.pDisease = 0.1
                 self.pDeath = 0.04
             else:
-                self.pDisease = 0.03
+                self.pDisease = 0.25
                 self.pDeath = 0.05
         else:
             if self.hasGoodHealth():
-                self.pDisease = 0.02
+                self.pDisease = 0.6
                 self.pDeath = 0.03
             elif self.hasBadHealth():
-                self.pDisease = 0.035
+                self.pDisease = 0.3
                 self.pDeath = 0.04
             else:
-                self.pDisease = 0.045
+                self.pDisease = 0.45
                 self.pDeath = 0.05
 
 

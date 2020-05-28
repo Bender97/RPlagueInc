@@ -10,10 +10,13 @@ import walkers.healthState as h
 BLACK = (0, 0, 0)
 
 color = [
-    (255, 255, 255), # WHITE
-    (255, 50, 50), # RED
-    (255, 255, 0), # YELLOW
-    (50, 255, 50) # GREEN
+    (255, 255, 255), # WHITE - SUSCEPTIBLE
+    (220, 220, 220), # LIGHTGREY - INCUBATION
+    #(50, 255, 50), # GREEN - RECOVERED
+    (255, 50, 50), # RED - INFECTED
+    (255, 255, 0), # YELLOW - ASYMPTOMATIC
+    (50, 255, 50), # GREEN - RECOVERED
+    BLACK # BLACK - DEAD
     ]
 
 class Location:
@@ -81,12 +84,18 @@ class Location:
         '''
         update the context inside the location ( a minute (or second, must decide) of life , for each update call)
 
+        1) update positions
+        2) tryDisease()
+        3) tryDeath()
+        4) tryRecovering()
+        5) tryInfection()
+
         Parameters
         ----------
         virus: Virus
             the virus spreading
         '''
-        # UPDATE THE POSITION OF EACH WALKER
+        # 1) update positions
         for walkerStatus in range(6):
             for walker in self.walkers[walkerStatus]:
                 tempx = walker.x + random.randint(-10, 10)
@@ -97,6 +106,46 @@ class Location:
                 
                 walker.move(tempx, tempy)
 
+        # 2) tryDisease()
+
+        for incubated in self.walkers[h.INCUBATION]:
+            if (incubated.TTL>0):
+                incubated.TTL -= 1
+            else:
+                flag, period = virus.tryDisease(incubated)
+                incubated.TTL = period
+                self.walkers[h.INCUBATION].remove(incubated)
+                if (flag): # disease
+                    self.walkers[h.INFECTED].append(incubated)
+                else:
+                    self.walkers[h.ASYMPTOMATIC].append(incubated)
+
+        # 3) tryDeath()
+
+        for infected in self.walkers[h.INFECTED]:
+            if (infected.TTL>0):
+                infected.TTL -= 1
+            else:
+                flag = virus.tryDeath(infected)
+
+                self.walkers[h.INFECTED].remove(infected)
+
+                if (flag):
+                    self.walkers[h.DEAD].append(infected)
+                else:
+                    self.walkers[h.RECOVERED].append(infected)
+
+        # 4) tryRecovering()
+
+        for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
+            if (asymptomatic.TTL>0):
+                asymptomatic.TTL -= 1
+            else:
+                self.walkers[h.ASYMPTOMATIC].remove(asymptomatic)
+                self.walkers[h.RECOVERED].append(asymptomatic)
+
+
+        # 5) tryInfection()
         # CHECK FOR EACH WALKER IF IT's CLOSE TO AN INFECTED
         #   IF SO -> ROLL
 
@@ -115,6 +164,7 @@ class Location:
                         if (flag):
                             break   # non ha senso fare altri controlli
             if flag:
+                susceptible.TTL = flag
                 self.walkers[h.INCUBATION].append(susceptible)
                 self.walkers[h.SUSCEPTIBLE].remove(susceptible)
 
@@ -152,9 +202,10 @@ class Location:
 
             font = pygame.font.Font(None, 36)
             
-            for walker in self.walkers:
-                pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), 5, 0)
-                pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), int(virus.range/2), 1)
+            for walkerStatus in range(6):
+                for walker in self.walkers[walkerStatus]:
+                    pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), 5, 0)
+                    pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), int(virus.range/2), 1)
 
             pygame.display.update()
             self.fps.tick(30)
