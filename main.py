@@ -15,12 +15,12 @@ for i in range(100):
     walker = Walker(640, 480, random.randint(1, 100), 1, loc)
     
     if (random.random()<0.2):
-    	walker.setStatus(h.INCUBATION)
-    	walker.updateVirusTimer(random.randint(2, 14))
+        walker.setStatus(h.INCUBATION)
+        walker.updateVirusTimer(random.randint(2, 14))
 
     loc.enter(walker)
 
-
 while(True):
-    loc.update(virus)
-    loc.render(virus)
+    for _ in range(24):
+        loc.run1HOUR(virus)
+        loc.render(virus)
