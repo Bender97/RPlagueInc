@@ -90,3 +90,12 @@ class Walker:
 
     def hasBadHealth(self):
         return self.healthLevel <= h.badHealth_level
+
+    def updateVirusTimer(self, value = None):
+        if(value != None):
+            self.TTL = value
+        elif (self.TTL>-1):
+            self.TTL-=1
+
+    def getVirusTimer(self):
+        return self.TTL

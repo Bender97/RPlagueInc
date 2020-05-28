@@ -42,8 +42,6 @@ class Location:
         for i in range(6):
             self.walkers.append([])
 
-        self.no_infected = 0 # number of infected
-
         # variables for rendering
         self.screen = None
         self.fps = 0
@@ -109,11 +107,11 @@ class Location:
         # 2) tryDisease()
 
         for incubated in self.walkers[h.INCUBATION]:
-            if (incubated.TTL>0):
-                incubated.TTL -= 1
+            if (incubated.getVirusTimer()>0):
+                incubated.updateVirusTimer()
             else:
                 flag, period = virus.tryDisease(incubated)
-                incubated.TTL = period
+                incubated.updateVirusTimer(period)
                 self.walkers[h.INCUBATION].remove(incubated)
                 if (flag): # disease
                     self.walkers[h.INFECTED].append(incubated)
@@ -123,8 +121,8 @@ class Location:
         # 3) tryDeath()
 
         for infected in self.walkers[h.INFECTED]:
-            if (infected.TTL>0):
-                infected.TTL -= 1
+            if (infected.getVirusTimer()>0):
+                infected.updateVirusTimer()
             else:
                 flag = virus.tryDeath(infected)
 
@@ -132,17 +130,19 @@ class Location:
 
                 if (flag):
                     self.walkers[h.DEAD].append(infected)
+                    print("+1 DEAD")
                 else:
                     self.walkers[h.RECOVERED].append(infected)
 
         # 4) tryRecovering()
 
         for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
-            if (asymptomatic.TTL>0):
-                asymptomatic.TTL -= 1
+            if (asymptomatic.getVirusTimer()>0):
+                asymptomatic.updateVirusTimer()
             else:
                 self.walkers[h.ASYMPTOMATIC].remove(asymptomatic)
                 self.walkers[h.RECOVERED].append(asymptomatic)
+                asymptomatic.setStatus(h.RECOVERED)
 
 
         # 5) tryInfection()
@@ -164,7 +164,7 @@ class Location:
                         if (flag):
                             break   # non ha senso fare altri controlli
             if flag:
-                susceptible.TTL = flag
+                susceptible.updateVirusTimer(flag)
                 self.walkers[h.INCUBATION].append(susceptible)
                 self.walkers[h.SUSCEPTIBLE].remove(susceptible)
 
