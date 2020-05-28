@@ -12,7 +12,7 @@ loc = buildDefaultLocation(HOME)
 loc.initRendering()
 
 for i in range(20):
-    loc.enter(Walker(640, 480, 18, 1))
+    loc.enter(Walker(640, 480, 18, 1, loc))
 
 # HARDCODED
 loc.walkers[0].setStatus(h.INFECTED)

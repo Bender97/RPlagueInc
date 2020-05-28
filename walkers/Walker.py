@@ -5,7 +5,7 @@ import walkers.healthState as h
 
 class Walker:
 
-	def __init__(self, width, height,age,disobedience):
+	def __init__(self, width, height,age,disobedience,home):
 		self.status = h.SUSCEPTIBLE
 		self.x = random.randint(0,width)
 		self.y = random.randint(0,height)
@@ -13,6 +13,7 @@ class Walker:
 		self.healingLevel = 0 #tasso di guarigione DAL VIRUS
 		self.age= age
 		self.disobedience = disobedience
+		self.home = home
 
 
 	def move(self, x, y):
@@ -27,3 +28,6 @@ class Walker:
 
 	def isSubsceptible(self):
 		return self.status == h.SUSCEPTIBLE
+
+	def isRecovered(self):
+		return self.status == h.RECOVERED

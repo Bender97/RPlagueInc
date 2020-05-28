@@ -13,8 +13,8 @@ SCHOOL = 3
 LEISURE = 4
 
 # Home default parameters
-HOME_X = 640
-HOME_Y = 480
+HOME_X = 640 # HOME_X = 20
+HOME_Y = 480 # HOME_Y = 30
 HOME_CAPACITY = 6
 
 STARTING_FOOD = 10
@@ -73,7 +73,7 @@ class Home (Location):
 
 
 def buildDefaultHome():
-    return Home(HOME_X, HOME_Y, HOME_CAPACITY, STARTING_FOOD, FAMILY_MEMBERS, STARTING_MONEY)
+    return Home(HOME_X, HOME_Y, HOME_CAPACITY, STARTING_FOOD,FAMILY_MEMBERS, STARTING_MONEY)
 # end buildDefaultHome
 
 
@@ -111,7 +111,7 @@ def buildWorkplaceRandomDays():
 # end buildWorkplaceRandomDays
 
 
-class GroceriesStore (Location):
+class GroceriesStore(Location):
 
     def __init__(self, size_x, size_y, max_capacity, food_price):
 
