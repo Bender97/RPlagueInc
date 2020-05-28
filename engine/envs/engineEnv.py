@@ -11,6 +11,8 @@ from gym.utils import seeding
 import numpy as np
 
 import engine.virus as vir
+import engine.regiongen as reggen
+import engine.popgen as popgen
 
 class EngineEnv(gym.Env):
     """
@@ -59,30 +61,24 @@ class EngineEnv(gym.Env):
     }
 
     # TODO
-    def __init__(self):
+    def __init__(self, loc_number, virus):
+
+        self.loc_number = loc_number
 
         self.region = None
-        self.virus = None
+        self.virus = virus
 
-        # Angle limit set to 2 * theta_threshold_radians so failing observation
-        # is still within bounds.
+
         low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
-        high = np.array([0, 0, 0, 0, +math.inf, 0, 0])
+        high = np.array([+math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf])
 
-        self.action_space = spaces.Discrete(2)
-        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
+        self.observation_space = spaces.Box(low, high, dtype=np.float32)
+        self.action_space = spaces.Discrete(7)
 
         self.seed()
-        self.viewer = None
-        self.state = None
 
-        self.steps_beyond_done = None
+        self.steps_done = 0
     # end __init__
-
-    def setVirus(self, virus):
-        self.virus = virus
-    def setTotPopulation(self, pop):
-        self.tot_pop = pop
 
 
     def seed(self, seed=None):
@@ -144,9 +140,9 @@ class EngineEnv(gym.Env):
         return np.array(self.state), reward, done, {}
 
     def reset(self):
-        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
-        self.steps_beyond_done = None
-        return np.array(self.state)
+        self.region = reggen.regionGen(self.loc_number)
+        popgen.genPopulation(self.region)
+        self.steps_done = 0
 
     def render(self, mode='human'):
         screen_width = 600
