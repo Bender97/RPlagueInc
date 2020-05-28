@@ -13,7 +13,7 @@ class Virus:
     def tryInfection(self,walker):
         if random.random() < self.pInfection:
             walker.setStatus(h.INCUBATION)
-            return random.randint(2, 14)
+            return random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1])
         else:
             return 0
 
@@ -23,10 +23,10 @@ class Virus:
             exit(1)
         if random.random() < walker.pDisease:
             walker.setStatus(h.INFECTED)
-            return 1, random.randint(7, 28) # disease, disease_time
+            return 1, random.randint(h.ASYMPTOMATIC_DURATION_RANGE[0], h.ASYMPTOMATIC_DURATION_RANGE[1]) # disease, disease_time
         else:
             walker.setStatus(h.ASYMPTOMATIC)
-            return 0, random.randint(7, 28) # asymptomatic, asymptomatic_time
+            return 0, random.randint(h.ASYMPTOMATIC_DURATION_RANGE[0], h.ASYMPTOMATIC_DURATION_RANGE[1]) # asymptomatic, asymptomatic_time
 
     def tryDeath(self, walker):
         if (walker.status!=h.INFECTED):

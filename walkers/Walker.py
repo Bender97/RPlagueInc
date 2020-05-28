@@ -5,7 +5,7 @@ import walkers.healthState as h
 
 class Walker:
 
-    def __init__(self, width, height,age,disobedience,home):
+    def __init__(self, width, height,age,disobedience,home, homeNode):
         self.status = h.SUSCEPTIBLE
         self.x = random.randint(0,width)
         self.y = random.randint(0,height)
@@ -14,7 +14,10 @@ class Walker:
         self.age = age
         self.disobedience = disobedience
         self.home = home
-
+        self.homeNode = homeNode #index of node
+        self.homeProbability = 1
+        # A coundown for disease
+        self.TTL = -1
         # Time To Live (it's just a countdown)
 
         self.TTL = -1
@@ -61,7 +64,24 @@ class Walker:
         self.x = x
         self.y = y
 
-    def setStatus(self, status):
+    # updates the status with a 1 day time step.Has to be called from engine.
+    #Has to work with tryDeath, when the counter reaches 0.
+    def updateVirusTimer(self, value = None):
+        if(value != None):
+            self.TTL = value
+        elif (self.TTL>-1):
+            self.TTL-=1
+
+    def getVirusTimer(self):
+        return self.TTL
+
+    def updateHomeProbability(self):
+        self.homeProbability -=(1/12.0) #can't stay more that 12 hrs at home
+
+    def resetHomeProbability(self):
+        self.homeProbability = 1 #at the start of a new day
+
+    def setStatus(self, status): #useless at this point
         self.status = status
 
     def isInfected(self):
@@ -90,12 +110,3 @@ class Walker:
 
     def hasBadHealth(self):
         return self.healthLevel <= h.badHealth_level
-
-    def updateVirusTimer(self, value = None):
-        if(value != None):
-            self.TTL = value
-        elif (self.TTL>-1):
-            self.TTL-=1
-
-    def getVirusTimer(self):
-        return self.TTL
