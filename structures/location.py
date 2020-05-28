@@ -36,6 +36,8 @@ class Location:
         self.max_capacity = max_capacity
 
         self.walkers = []
+        for i in range(6):
+            self.walkers.append([])
 
         self.no_infected = 0 # number of infected
 
@@ -57,7 +59,7 @@ class Location:
             new walker to enter the location
         '''
 
-        self.walkers.append(walker)
+        self.walkers[walker.status].append(walker)
 
     # end enter
 
@@ -71,7 +73,7 @@ class Location:
             new walker to enter the location
         '''
 
-        self.walkers.remove(walker)
+        self.walkers[walker.status].remove(walker)
 
     # end exit
 
@@ -85,29 +87,36 @@ class Location:
             the virus spreading
         '''
         # UPDATE THE POSITION OF EACH WALKER
-        for walker in self.walkers:
-            tempx = walker.x + random.randint(-10, 10)
-            tempy = walker.y + random.randint(-10, 10)
+        for walkerStatus in range(6):
+            for walker in self.walkers[walkerStatus]:
+                tempx = walker.x + random.randint(-10, 10)
+                tempy = walker.y + random.randint(-10, 10)
 
-            tempx = (0 if tempx<0 else (self.size_x if tempx>self.size_x else tempx))
-            tempy = (0 if tempy<0 else (self.size_y if tempy>self.size_y else tempy))
-            
-            walker.move(tempx, tempy)
+                tempx = (0 if tempx<0 else (self.size_x if tempx>self.size_x else tempx))
+                tempy = (0 if tempy<0 else (self.size_y if tempy>self.size_y else tempy))
+                
+                walker.move(tempx, tempy)
 
         # CHECK FOR EACH WALKER IF IT's CLOSE TO AN INFECTED
         #   IF SO -> ROLL
 
-        new_infected = 0
-        
-        for i in range(self.no_infected, len(self.walkers)):
-            for j in range(self.no_infected):
-                if (distance(self.walkers[i], self.walkers[j]) < virus.range):
-                    new_infected += virus.tryInfection(self.walkers[i])
+        for susceptible in self.walkers[h.SUSCEPTIBLE]:
+            flag = 0
 
-        # UPDATE no_infected AND SORT walkers
-        if (new_infected>0):
-            self.no_infected += new_infected
-            self.walkers.sort(key = lambda x: x.status, reverse=True)
+            for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
+                if (distance(susceptible, asymptomatic) < virus.range):
+                    flag = virus.tryInfection(susceptible)
+                    if (flag):
+                        break   # non ha senso fare altri controlli
+            if not flag:
+                for infected in self.walkers[h.INFECTED]:
+                    if (distance(susceptible, infected) < virus.range):
+                        flag = virus.tryInfection(susceptible)
+                        if (flag):
+                            break   # non ha senso fare altri controlli
+            if flag:
+                self.walkers[h.INCUBATION].append(susceptible)
+                self.walkers[h.SUSCEPTIBLE].remove(susceptible)
 
     # end update
 
