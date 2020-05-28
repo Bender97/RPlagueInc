@@ -10,6 +10,7 @@ from gym import spaces, logger
 from gym.utils import seeding
 import numpy as np
 
+import engine.virus as vir
 
 class EngineEnv(gym.Env):
     """
@@ -24,7 +25,7 @@ class EngineEnv(gym.Env):
         1   Infected                0           POP_NUM
         2   Recovered               0           POP_NUM
         3   Deads                   0           POP_NUM
-        4   Discontent              0           +infinite
+        4   Discontent              -infinite   +infinite
         5   Population Money Avg    0           +infinite
         6   R0                      0           +infinite
     Actions:
@@ -57,23 +58,16 @@ class EngineEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
+    # TODO
     def __init__(self):
 
-        self.region
-        self.virus = 
-
-
-        # Angle at which to fail the episode
-        self.theta_threshold_radians = 12 * 2 * math.pi / 360
-        self.x_threshold = 2.4
+        self.region = None
+        self.virus = None
 
         # Angle limit set to 2 * theta_threshold_radians so failing observation
         # is still within bounds.
-        high = np.array([self.x_threshold * 2,
-                         np.finfo(np.float32).max,
-                         self.theta_threshold_radians * 2,
-                         np.finfo(np.float32).max],
-                        dtype=np.float32)
+        low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
+        high = np.array([0, 0, 0, 0, +math.inf, 0, 0])
 
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(-high, high, dtype=np.float32)
@@ -83,6 +77,13 @@ class EngineEnv(gym.Env):
         self.state = None
 
         self.steps_beyond_done = None
+    # end __init__
+
+    def setVirus(self, virus):
+        self.virus = virus
+    def setTotPopulation(self, pop):
+        self.tot_pop = pop
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
