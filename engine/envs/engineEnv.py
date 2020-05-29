@@ -68,22 +68,23 @@ class EngineEnv(gym.Env):
     }
 
     # TODO
-    def __init__(self, nLocation, virus):
+    def __init__(self,nLocation, virus):
 
-        self.nLocation = nLocation
-        self.steps_done = 0
         self.gDict = nx.get_node_attributes(self.region) #dict that links nodes to locations objects
 
         self.virus = virus
 
-        # Angle limit set to 2 * theta_threshold_radians so failing observation
-        # is still within bounds.
+        ######not over yet#########
         low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
-        high = np.array([+math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf])
+        high = np.array([0, 0, 0, 0, +math.inf, 0, 0])
 
-        self.action_space = spaces.Discrete(7)
-        self.observation_space = spaces.Box(low, high, dtype=np.float32)
+        self.action_space = spaces.Discrete(2)
+        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
 
+        self.viewer = None
+        self.state = None
+
+        self.steps_beyond_done = None
     # end __init__
 
 
@@ -93,6 +94,7 @@ class EngineEnv(gym.Env):
         for hour in range(0,24): #inizio delle 24 ore
             for loc in gDict.values(): #for every location
                 for w in loc.walkers:
+                    #Adult Schedule
                     if w.isAdult:
                         if (random.rand() < self.adultHomeProbFcn(hour)) or w.wentForGroceries:
                             self.goHome(w)  # if already at home, nothing happens
@@ -100,24 +102,83 @@ class EngineEnv(gym.Env):
                         else:
                             atHome = (w.homeNode == w.loc)
                             if atHome:
-                                if(w.home.needFood() and (8<=hour<=10 or 17<=hour<=19)):
-                                    self.leave(w,l.GROCERIES_STORE)
-                                    #buy
+                                if(w.home.needFood() and (8<=hour<=10 or 17<=hour<=19)) and random.rand() < (1 - w.disobedience):
+                                    self.goToNearestLoc(w,l.GROCERIES_STORE)
+                                    self.gDict[w.loc].buyFood(w.home)
                                     w.wentForGroceries=True
-                                else: #altre cose per il worker
-                                    activity=np.random.ch
-
+                                    food = w.home.family_qty * random.randint(3,7)
+                                    w.home.money-=self.gDict[w.loc].buyFood(food)
+                                    w.home.bringFood(food)
+                                    break
+                            activityLoc=np.random.choice([l.WORKPLACE,l.LEISURE] , p=[0.75,0.25])
+                            self.goToNearestLoc(w,activityLoc)
+                    #Child
+                    elif w.isChild():
+                        if not(7<=hour<=19) or w.wentForGroceries:
+                            self.goHome(w)
+                            w.wentForGroceries = False
+                        elif(7<=hour<=8):
+                            if w.loc == w.homeNode:
+                                if random.rand() < 0.7:
+                                    self.goToNearestLoc(w,l.SCHOOL)
+                        elif(hour ==9):
+                            if w.loc == w.homeNode:
+                                self.goToNearestLoc(w,l.SCHOOL)
+                        elif(13<=hour<=14):
+                            if w.loc != w.homeNode:
+                                if random.rand() < 0.5:
+                                    self.goToNearestLoc(w,l.SCHOOL)
+                        elif(hour==15):
+                            if w.loc != w.homeNode:
+                                self.goHome(w)
+                        elif(16<=hour<=19):
+                            if w.loc == w.homeNode:
+                                if w.home.needFood() and random.rand() < (1 - w.disobedience):
+                                    self.goToNearestLoc(w, l.GROCERIES_STORE)
+                                    self.gDict[w.loc].buyFood(w.home)
+                                    w.wentForGroceries = True
+                                    food = w.home.family_qty * random.randint(3, 7)
+                                    w.home.money -= self.gDict[w.loc].buyFood(food)
+                                    w.home.bringFood(food)
+                                    break
+                                if random.rand()<0.6:
+                                    self.goToNearestLoc(w,l.LEISURE) #go out and play a little
+                            else:
+                                if random.rand()<0.4:
+                                    self.goHome(w)
+                    #Elder
+                    else:
+                        if not(7<=hour<=19) or w.wentForGroceries:
+                            self.goHome(w)
+                            w.wentForGroceries = False
+                        else:
+                            if w.loc == w.homeNode:
+                                if w.home.needFood() and random.rand() < (1 - w.disobedience):
+                                    self.goToNearestLoc(w, l.GROCERIES_STORE)
+                                    self.gDict[w.loc].buyFood(w.home)
+                                    w.wentForGroceries = True
+                                    food = w.home.family_qty * random.randint(3, 7)
+                                    w.home.money -= self.gDict[w.loc].buyFood(food)
+                                    w.home.bringFood(food)
+                                    break
+                                if random.rand() < 0.4:
+                                        self.goToNearestLoc(w, l.LEISURE)
+                            else:
+                                if random.rand() < 0.6:
+                                        self.goHome(w)
             l.run1HOUR(self.virus)
         for loc in gDict.values():  #produce the deaths. tryInfection and tryDisease are called inside location file
-            for w in loc.walkers:
-                w.updateVirusTimer()
-                if w.getVirusTimer() ==0:
-                    self.virus.tryDeath(w) #no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
+            if isinstance(loc,l.Home):
+                loc.eatFood()
+                for w in loc.walkers:
+                    w.updateVirusTimer()
+                    if w.getVirusTimer() ==0:
+                        self.virus.tryDeath(w) #no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
         #inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
 
     ##################################################################
 
-    def reset(self, nLocation):
+    def reset(self,nLocation):
         self.region = reggen.regionGen(nLocation)
         popgen.genPopulation(self.region)
         self.steps_done = 0
@@ -135,10 +196,15 @@ class EngineEnv(gym.Env):
         else:
             return 1-((math.fabs(hour-12)*2)/24.0)
 
-    #def childHomeProbFcn(self,hour):
-        #if(7 <= hour <=)
-        #else : #coprifuoco
-            #return 1
+    def childHomeProbFcn(self,hour):
+        if(7 <= hour <=9):
+            return 0.5
+        elif(10 <= hour <=14):
+            return 0
+        elif(15 <= hour <=17):
+            return 0.5
+        else : #coprifuoco
+            return 1
 
     #def close(self):
 
@@ -146,7 +212,7 @@ class EngineEnv(gym.Env):
             pathsDict = defaultdict(list)
             found = False
             gDict= self.gDict #giusto per non scrivere self ogni volta xD
-            paths= nx.shortest_path(self.region, source=walker.pos)
+            paths= nx.shortest_path(self.region, source=walker.loc)
             for i in range(0,self.nLocation):
                 if paths[i].length() >0:
                     pathsDict[paths[i].lenght].append(i)
