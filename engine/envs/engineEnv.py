@@ -15,6 +15,7 @@ import structures.location as l
 import engine.popgen as popgen
 import engine.regiongen as reggen
 from collections import defaultdict
+import engine.statistics as stats
 
 
 import engine.virus as vir
@@ -74,7 +75,6 @@ class EngineEnv(gym.Env):
     def initialize(self, nLocation, virus):
         self.nLocation = nLocation
         self.virus = virus
-        self.reset(self.nLocation)
         self.gDict = nx.get_node_attributes(self.region, 'LocType') #dict that links nodes to locations objects
 
         self.virus = virus
@@ -181,12 +181,15 @@ class EngineEnv(gym.Env):
 
     ##################################################################
 
-    def reset(self,nLocation):
+    def reset(self, nLocation):
         self.region = reggen.regionGen(nLocation)
         popgen.genPopulation(self.region)
         self.steps_done = 0
         self.nLocation = nLocation
 
+        statistics = list(stats.computeStatistics(self).items())
+
+        return statistics
 
     #def render(self, mode='human'):
 
