@@ -36,7 +36,7 @@ def computeStatistics(engine):
     money_accum = 0
     n_homes = 0
     # for each location in the region compute the SIR statistics + M
-    for loc in engine.region.nodes():
+    for loc in nx.get_node_attributes(engine.region, 'LocType'):
         statistics[S] += len(loc.walkers[SUSCEPTIBLE]) + len(loc.walkers[ASYMPTOMATICS])
         statistics[I] += len(loc.walkers[INFECTED])
         statistics[R] += len(loc.walkers[RECOVERED])
