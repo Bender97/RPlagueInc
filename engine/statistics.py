@@ -1,7 +1,6 @@
 ﻿from structures.location import Location
 from structures.locations import Home
 import walkers.healthState
-from engine.envs.engineEnv import EngineEnv
 import networkx as nx
 
 '''

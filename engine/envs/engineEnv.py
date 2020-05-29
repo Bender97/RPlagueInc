@@ -79,7 +79,6 @@ class EngineEnv(gym.Env):
 
         self.virus = virus
 
-
         low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
         high = np.array([+math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf])
 
@@ -176,8 +175,10 @@ class EngineEnv(gym.Env):
                 for w in loc.walkers:
                     w.updateVirusTimer()
                     if w.getVirusTimer() ==0:
-                        self.virus.tryDeath(w) #no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
+                        flag = self.virus.tryDeath(w) #no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
         #inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
+                        if (flag):
+                            self.deads += 1
 
     ##################################################################
 
@@ -186,6 +187,8 @@ class EngineEnv(gym.Env):
         popgen.genPopulation(self.region)
         self.steps_done = 0
         self.nLocation = nLocation
+
+        self.deads = 0
 
         statistics = list(stats.computeStatistics(self).items())
 
