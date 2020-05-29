@@ -68,9 +68,14 @@ class EngineEnv(gym.Env):
     }
 
     # TODO
-    def __init__(self,nLocation, virus):
+    def __init__(self):
+        return
 
-        self.gDict = nx.get_node_attributes(self.region) #dict that links nodes to locations objects
+    def initialize(self, nLocation, virus):
+        self.nLocation = nLocation
+        self.virus = virus
+        self.reset(self.nLocation)
+        self.gDict = nx.get_node_attributes(self.region, 'LocType') #dict that links nodes to locations objects
 
         self.virus = virus
 

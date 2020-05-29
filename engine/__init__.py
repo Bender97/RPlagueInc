@@ -1,4 +1,4 @@
-from gym.envs.registration import register
+from gym.envs.registration import registry, register, make, spec
 
 register(
     id='engine-v0',

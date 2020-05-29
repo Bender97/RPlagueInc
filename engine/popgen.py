@@ -6,7 +6,7 @@ import structures.locations as l
 
 def genPopulation(region):
         try:
-            Gdict = nx.get_node_attributes(region)
+            Gdict = nx.get_node_attributes(region, 'LocType')
             for key in Gdict.keys():
                 if isinstance(Gdict[key], l.Home):
                     maxPeople = Gdict[key].max_capacity

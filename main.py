@@ -1,59 +1,35 @@
-from structures.locations import *
-import random
-
-from engine.virus import Virus
-from walkers.Walker import Walker
-
-import walkers.healthState as h
-
+import gym
+import engine.envs.engineEnv
 import time
+from engine.virus import Virus
 
 virus = Virus(range = 40, pInfection = 1 , healthParams = 1, healingParams = 1)
 
-loc = buildDefaultLocation(HOME)
-loc.initRendering()
 
-for i in range(10):
-                    
-    walker = Walker( 640, # loc_width
-                     480, # loc_height
-                     random.randint(1, 100), # age
-                     1,   # disobedience
-                     loc, # where it lives
-                     None)
-    
-    if (random.random()<0.2):
-        walker.setStatus(h.INCUBATION)
-        walker.updateVirusTimer(value = random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1]))
+#create the cartpole environment
+env = gym.make("engine-v0")
+env.initialize(nLocation = 20, virus = virus)
+#initialize the environment and get the first observation
+#observation = env.reset()
+#>[-0.01691473  0.04548045 -0.02779662  0.04136515]
 
-    loc.enter(walker)
+'''
+print(observation)
+env.render()
+input()
+exit()
+'''
 
-while(True):
-    for _ in range(24):
+for _ in range(1000):
+    env.render()
+    action = env.action_space.sample() # your agent here (this takes random actions)
+    observation, reward, done, info = env.step(action)
 
-        loc.run1HOUR(virus)
+    print(str(reward) + " - " + str(done))
+    if (reward==0):
+        input()
 
-        for incubated in loc.walkers[h.INCUBATION]:
-            if (incubated.getVirusTimer()>0):
-                incubated.updateVirusTimer()
-        
-        for asymptomatic in loc.walkers[h.ASYMPTOMATIC]:
-            if (asymptomatic.getVirusTimer()>0):
-                asymptomatic.updateVirusTimer()
-
-        for infected in loc.walkers[h.INFECTED]:
-            if (infected.getVirusTimer()>0):
-                infected.updateVirusTimer()
-            else:
-                flag = virus.tryDeath(infected)
-
-                loc.walkers[h.INFECTED].remove(infected)
-
-                if (flag):
-                    loc.walkers[h.DEAD].append(infected)
-                    print("+1 DEAD")
-                else:
-                    loc.walkers[h.RECOVERED].append(infected)
-        
-        loc.render(virus)
-        time.sleep(0.5)
+    time.sleep(0.5)
+    if done:
+        observation = env.reset()
+env.close()

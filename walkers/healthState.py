@@ -13,3 +13,7 @@ young_age = 20
 
 goodHealth_level = 0.8
 badHealth_level = 0.5
+
+INCUBATION_DURATION_RANGE = (2, 14)
+DISEASE_DURATION_RANGE = (7, 28)
+ASYMPTOMATIC_DURATION_RANGE = (7, 28)

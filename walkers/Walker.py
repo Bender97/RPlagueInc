@@ -16,6 +16,7 @@ class Walker:
         self.home = home #home object, may be omitted, or substituted with the current location to add another data
         self.homeNode = homeNode #index of home node
         self.loc = homeNode #conterrà la posizione attuale del walker
+        
         # A coundown for disease
         self.TTL = -1
         self.wentForGroceries=False
