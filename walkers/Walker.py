@@ -13,18 +13,13 @@ class Walker:
         self.healingLevel = 0 # tasso di guarigione DAL VIRUS
         self.age = age
         self.disobedience = disobedience
-        self.home = home
-        self.homeNode = homeNode #index of node
-        self.homeProbability = 1
+        self.home = home #home object, may be omitted, or substituted with the current location to add another data
+        self.homeNode = homeNode #index of home node
+        self.loc = homeNode #conterrà la posizione attuale del walker
         # A coundown for disease
         self.TTL = -1
-        # Time To Live (it's just a countdown)
+        self.wentForGroceries=False
 
-        self.TTL = -1
-
-        # just for testing, 2 lines to be deleted
-        self.pDisease = 0
-        self.pDeath = 0
 
         # maybe this part should be delegated to a function
         if self.isChild():
@@ -74,12 +69,6 @@ class Walker:
 
     def getVirusTimer(self):
         return self.TTL
-
-    def updateHomeProbability(self):
-        self.homeProbability -=(1/12.0) #can't stay more that 12 hrs at home
-
-    def resetHomeProbability(self):
-        self.homeProbability = 1 #at the start of a new day
 
     def setStatus(self, status): #useless at this point
         self.status = status

@@ -7,12 +7,19 @@ permalink: https://perma.cc/C9ZM-652R
 import math
 import gym
 from gym import spaces, logger
-from gym.utils import seeding
+import random
 import numpy as np
+import structures.locations as l
+import networkx as nx
+import structures.location as l
+import engine.popgen as popgen
+import engine.regiongen as reggen
+from collections import defaultdict
+
 
 import engine.virus as vir
-import engine.regiongen as reggen
-import engine.popgen as popgen
+from walkers.Walker import Walker
+
 
 class EngineEnv(gym.Env):
     """
@@ -61,144 +68,129 @@ class EngineEnv(gym.Env):
     }
 
     # TODO
-    def __init__(self, loc_number, virus):
+    def __init__(self, nLocation, virus):
 
-        self.loc_number = loc_number
+        self.nLocation = nLocation
+        self.steps_done = 0
+        self.gDict = nx.get_node_attributes(self.region) #dict that links nodes to locations objects
 
-        self.region = None
         self.virus = virus
 
-
+        # Angle limit set to 2 * theta_threshold_radians so failing observation
+        # is still within bounds.
         low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
         high = np.array([+math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf])
 
-        self.observation_space = spaces.Box(low, high, dtype=np.float32)
         self.action_space = spaces.Discrete(7)
+        self.observation_space = spaces.Box(low, high, dtype=np.float32)
 
-        self.seed()
-
-        self.steps_done = 0
     # end __init__
 
 
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
 
     def step(self, action):
-        err_msg = "%r (%s) invalid" % (action, type(action))
-        assert self.action_space.contains(action), err_msg
+        gDict= self.gDict #giusto per non scrivere self ogni volta xD
+        for hour in range(0,24): #inizio delle 24 ore
+            for loc in gDict.values(): #for every location
+                for w in loc.walkers:
+                    if w.isAdult:
+                        if (random.rand() < self.adultHomeProbFcn(hour)) or w.wentForGroceries:
+                            self.goHome(w)  # if already at home, nothing happens
+                            w.wentForGroceries=False
+                        else:
+                            atHome = (w.homeNode == w.loc)
+                            if atHome:
+                                if(w.home.needFood() and (8<=hour<=10 or 17<=hour<=19)):
+                                    self.leave(w,l.GROCERIES_STORE)
+                                    #buy
+                                    w.wentForGroceries=True
+                                else: #altre cose per il worker
+                                    activity=np.random.ch
 
-        x, x_dot, theta, theta_dot = self.state
-        force = self.force_mag if action == 1 else -self.force_mag
-        costheta = math.cos(theta)
-        sintheta = math.sin(theta)
+            l.run1HOUR(self.virus)
+        for loc in gDict.values():  #produce the deaths. tryInfection and tryDisease are called inside location file
+            for w in loc.walkers:
+                w.updateVirusTimer()
+                if w.getVirusTimer() ==0:
+                    self.virus.tryDeath(w) #no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
+        #inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
 
-        # For the interested reader:
-        # https://coneural.org/florian/papers/05_cart_pole.pdf
-        temp = (force + self.polemass_length * theta_dot ** 2 * sintheta) / self.total_mass
-        thetaacc = (self.gravity * sintheta - costheta * temp) / (self.length * (4.0 / 3.0 - self.masspole * costheta ** 2 / self.total_mass))
-        xacc = temp - self.polemass_length * thetaacc * costheta / self.total_mass
+    ##################################################################
 
-        if self.kinematics_integrator == 'euler':
-            x = x + self.tau * x_dot
-            x_dot = x_dot + self.tau * xacc
-            theta = theta + self.tau * theta_dot
-            theta_dot = theta_dot + self.tau * thetaacc
-        else:  # semi-implicit euler
-            x_dot = x_dot + self.tau * xacc
-            x = x + self.tau * x_dot
-            theta_dot = theta_dot + self.tau * thetaacc
-            theta = theta + self.tau * theta_dot
-
-        self.state = (x, x_dot, theta, theta_dot)
-
-        done = bool(
-            x < -self.x_threshold
-            or x > self.x_threshold
-            or theta < -self.theta_threshold_radians
-            or theta > self.theta_threshold_radians
-        )
-
-        if not done:
-            reward = 1.0
-        elif self.steps_beyond_done is None:
-            # Pole just fell!
-            self.steps_beyond_done = 0
-            reward = 1.0
-        else:
-            if self.steps_beyond_done == 0:
-                logger.warn(
-                    "You are calling 'step()' even though this "
-                    "environment has already returned done = True. You "
-                    "should always call 'reset()' once you receive 'done = "
-                    "True' -- any further steps are undefined behavior."
-                )
-            self.steps_beyond_done += 1
-            reward = 0.0
-
-        return np.array(self.state), reward, done, {}
-
-    def reset(self):
-        self.region = reggen.regionGen(self.loc_number)
+    def reset(self, nLocation):
+        self.region = reggen.regionGen(nLocation)
         popgen.genPopulation(self.region)
         self.steps_done = 0
+        self.nLocation = nLocation
 
-    def render(self, mode='human'):
-        screen_width = 600
-        screen_height = 400
 
-        world_width = self.x_threshold * 2
-        scale = screen_width/world_width
-        carty = 100  # TOP OF CART
-        polewidth = 10.0
-        polelen = scale * (2 * self.length)
-        cartwidth = 50.0
-        cartheight = 30.0
+    #def render(self, mode='human'):
 
-        if self.viewer is None:
-            from gym.envs.classic_control import rendering
-            self.viewer = rendering.Viewer(screen_width, screen_height)
-            l, r, t, b = -cartwidth / 2, cartwidth / 2, cartheight / 2, -cartheight / 2
-            axleoffset = cartheight / 4.0
-            cart = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
-            self.carttrans = rendering.Transform()
-            cart.add_attr(self.carttrans)
-            self.viewer.add_geom(cart)
-            l, r, t, b = -polewidth / 2, polewidth / 2, polelen - polewidth / 2, -polewidth / 2
-            pole = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
-            pole.set_color(.8, .6, .4)
-            self.poletrans = rendering.Transform(translation=(0, axleoffset))
-            pole.add_attr(self.poletrans)
-            pole.add_attr(self.carttrans)
-            self.viewer.add_geom(pole)
-            self.axle = rendering.make_circle(polewidth/2)
-            self.axle.add_attr(self.poletrans)
-            self.axle.add_attr(self.carttrans)
-            self.axle.set_color(.5, .5, .8)
-            self.viewer.add_geom(self.axle)
-            self.track = rendering.Line((0, carty), (screen_width, carty))
-            self.track.set_color(0, 0, 0)
-            self.viewer.add_geom(self.track)
 
-            self._pole_geom = pole
 
-        if self.state is None:
-            return None
 
-        # Edit the pole polygon vertex
-        pole = self._pole_geom
-        l, r, t, b = -polewidth / 2, polewidth / 2, polelen - polewidth / 2, -polewidth / 2
-        pole.v = [(l, b), (l, t), (r, t), (r, b)]
+    def adultHomeProbFcn(self,hour): #hour-dependent,prob to go/stay home
+        if(hour==12):
+            return 0.50
+        else:
+            return 1-((math.fabs(hour-12)*2)/24.0)
 
-        x = self.state
-        cartx = x[0] * scale + screen_width / 2.0  # MIDDLE OF CART
-        self.carttrans.set_translation(cartx, carty)
-        self.poletrans.set_rotation(-x[2])
+    #def childHomeProbFcn(self,hour):
+        #if(7 <= hour <=)
+        #else : #coprifuoco
+            #return 1
 
-        return self.viewer.render(return_rgb_array=mode == 'rgb_array')
+    #def close(self):
 
-    def close(self):
-        if self.viewer:
-            self.viewer.close()
-            self.viewer = None
+    def goToNearestLoc(self, walker, locType): #movimento dalla posizione attuale al posto selezionato più vicino
+            pathsDict = defaultdict(list)
+            found = False
+            gDict= self.gDict #giusto per non scrivere self ogni volta xD
+            paths= nx.shortest_path(self.region, source=walker.pos)
+            for i in range(0,self.nLocation):
+                if paths[i].length() >0:
+                    pathsDict[paths[i].lenght].append(i)
+            for len in sorted(pathsDict.keys()):
+                for dest in pathsDict[len]:
+                        #scandisce la lista dai nodi più vicini ai più lontani
+                        if locType==l.WORKPLACE and isinstance(gDict[dest],l.Workplace):
+                            walker.home.exit(walker)
+                            gDict[dest].enter(walker)
+                            walker.loc = dest
+                            found=True
+                            break
+                        elif locType==l.SCHOOL and isinstance(gDict[dest],l.School):
+                            walker.home.exit(walker)
+                            gDict[dest].enter(walker)
+                            walker.loc = dest
+                            found = True
+                            break
+                        elif locType==l.GROCERIES_STORE and isinstance(gDict[dest],l.GroceriesStore):
+                            walker.home.exit(walker)
+                            gDict[dest].enter(walker)
+                            walker.loc = dest
+                            found = True
+                            break
+                        elif locType ==l.LEISURE and isinstance(gDict[dest],l.Leisure):
+                            walker.home.exit(walker)
+                            gDict[dest].enter(walker)
+                            walker.loc = dest
+                            found = True
+                            break
+                if found:
+                    break
+
+
+
+
+
+
+
+
+
+    def goHome(self, walker): # torna a casa (se non ci è già)
+        if not(walker.loc == walker.homeNode):
+            self.gDict[walker.loc].exit(walker)
+            walker.home.enter(walker)
+            walker.loc = walker.homeNode
+
