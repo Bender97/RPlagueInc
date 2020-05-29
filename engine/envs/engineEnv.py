@@ -79,17 +79,15 @@ class EngineEnv(gym.Env):
 
         self.virus = virus
 
-        ######not over yet#########
+
         low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
-        high = np.array([0, 0, 0, 0, +math.inf, 0, 0])
+        high = np.array([+math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf])
 
-        self.action_space = spaces.Discrete(2)
-        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
+        self.action_space = spaces.Discrete(7)
+        self.observation_space = spaces.Box(low, high, dtype=np.float32)
 
-        self.viewer = None
-        self.state = None
 
-        self.steps_beyond_done = None
+        self.steps_done = None
     # end __init__
 
 
