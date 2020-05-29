@@ -190,6 +190,14 @@ class EngineEnv(gym.Env):
 
         self.deads = 0
 
+        self.contact_list = {}
+
+        Gdict = nx.get_node_attributes(self.region, 'LocType')
+        for key in Gdict.keys():
+            for statusType in range(6):
+                for walker in Gdict[key].walkers[statusType]:
+                    self.contact_list[walker] = 0
+
         statistics = list(stats.computeStatistics(self).items())
 
         return statistics

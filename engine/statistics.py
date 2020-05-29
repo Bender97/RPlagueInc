@@ -1,6 +1,6 @@
 ﻿from structures.location import Location
 from structures.locations import Home
-import walkers.healthState
+import walkers.healthState as h
 import networkx as nx
 
 '''
@@ -36,10 +36,11 @@ def computeStatistics(engine):
     money_accum = 0
     n_homes = 0
     # for each location in the region compute the SIR statistics + M
-    for loc in nx.get_node_attributes(engine.region, 'LocType'):
-        statistics[S] += len(loc.walkers[SUSCEPTIBLE]) + len(loc.walkers[ASYMPTOMATICS])
-        statistics[I] += len(loc.walkers[INFECTED])
-        statistics[R] += len(loc.walkers[RECOVERED])
+
+    for ID, loc in nx.get_node_attributes(engine.region, 'LocType').items():
+        statistics[S] += len(loc.walkers[h.SUSCEPTIBLE]) + len(loc.walkers[h.ASYMPTOMATIC])
+        statistics[I] += len(loc.walkers[h.INFECTED])
+        statistics[R] += len(loc.walkers[h.RECOVERED])
         if isinstance(loc, Home):
             money_accum += loc.money
             n_homes += 1

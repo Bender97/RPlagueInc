@@ -1,7 +1,6 @@
 ﻿import networkx as nx
 import random
 import numpy as np
-import walkers.healthState
 import structures.locations as l
 import matplotlib.pyplot as plt
 

@@ -5,7 +5,7 @@ import walkers.healthState as h
 
 class Walker:
 
-    def __init__(self, width, height,age,disobedience,home, homeNode):
+    def __init__(self, width, height, age, disobedience, home, homeNode):
         self.status = h.SUSCEPTIBLE
         self.x = random.randint(0,width)
         self.y = random.randint(0,height)
