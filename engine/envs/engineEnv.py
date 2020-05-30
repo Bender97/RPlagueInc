@@ -263,14 +263,6 @@ class EngineEnv(gym.Env):
                 if found:
                     break
 
-
-
-
-
-
-
-
-
     def goHome(self, walker): # torna a casa (se non ci è già)
         if not(walker.loc == walker.homeNode):
             self.gDict[walker.loc].exit(walker)
