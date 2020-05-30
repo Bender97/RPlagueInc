@@ -113,7 +113,7 @@ class EngineEnv(gym.Env):
                             else:
                                 atHome = (w.homeNode == w.loc)
                                 if atHome:
-                                    if(w.home.needFood() and (8<=hour<=10 or 17<=hour<=19)) and random.rand() < (1 - w.disobedience):
+                                    if(w.home.needFood() and (8<=hour<=10 or 17<=hour<=19)) and random.random() < (1 - w.disobedience):
                                         self.goToNearestLoc(w,ls.GROCERIES_STORE)
                                         self.gDict[w.loc].buyFood(w.home)
                                         w.wentForGroceries=True
@@ -130,7 +130,7 @@ class EngineEnv(gym.Env):
                                 w.wentForGroceries = False
                             elif(7<=hour<=8):
                                 if w.loc == w.homeNode:
-                                    if random.rand() < 0.7:
+                                    if random.random() < 0.7:
                                         self.goToNearestLoc(w,ls.SCHOOL)
                             elif(hour ==9):
                                 if w.loc == w.homeNode:
@@ -144,7 +144,7 @@ class EngineEnv(gym.Env):
                                     self.goHome(w)
                             elif(16<=hour<=19):
                                 if w.loc == w.homeNode:
-                                    if w.home.needFood() and random.rand() < (1 - w.disobedience):
+                                    if w.home.needFood() and random.random() < (1 - w.disobedience):
                                         self.goToNearestLoc(w, ls.GROCERIES_STORE)
                                         self.gDict[w.loc].buyFood(w.home)
                                         w.wentForGroceries = True
@@ -175,19 +175,22 @@ class EngineEnv(gym.Env):
                                     if random.random() < 0.4:
                                             self.goToNearestLoc(w, ls.LEISURE)
                                 else:
-                                    if random.rand() < 0.6:
+                                    if random.random() < 0.6:
                                             self.goHome(w)
-            l.run1HOUR(self.virus)
+            loc.run1HOUR(self.virus)
         for loc in gDict.values():  #produce the deaths. tryInfection and tryDisease are called inside location file
             if isinstance(loc,ls.Home):
                 loc.eatFood()
-                for w in loc.walkers:
-                    w.updateVirusTimer()
-                    if w.getVirusTimer() ==0:
-                        flag = self.virus.tryDeath(w) #no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
-        #inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
-                        if (flag):
-                            self.deads += 1
+                for walkerType in range(6):
+                    for w in loc.walkers[walkerType]:
+                        w.updateVirusTimer()
+                        if w.getVirusTimer() ==0:
+                            flag = self.virus.tryDeath(w) #no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
+            #inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
+                            if (flag):
+                                self.deads += 1
+
+        return 
 
     ##################################################################
 
@@ -257,32 +260,34 @@ class EngineEnv(gym.Env):
             found = False
             gDict= self.gDict #giusto per non scrivere self ogni volta xD
             paths= nx.shortest_path(self.region, source=walker.loc)
-            for i in range(0,self.nLocation):
-                if len(paths[i]) >0:
-                    pathsDict[paths[i]].append(i)
+
+            for i in range( 0, len(paths) ):
+                if paths[i] != None and len(paths[i])>1:
+                    pathsDict[len(paths[i])].append(i)
+            
             for length in sorted(pathsDict.keys()):
-                for dest in pathsDict[lenght]:
+                for dest in pathsDict[length]:
                         #scandisce la lista dai nodi più vicini ai più lontani
                         if locType==ls.WORKPLACE and isinstance(gDict[dest],ls.Workplace):
-                            walker.home.exit(walker)
+                            gDict[walker.loc].exit(walker)
                             gDict[dest].enter(walker)
                             walker.loc = dest
                             found=True
                             break
                         elif locType==ls.SCHOOL and isinstance(gDict[dest],ls.School):
-                            walker.home.exit(walker)
+                            gDict[walker.loc].exit(walker)
                             gDict[dest].enter(walker)
                             walker.loc = dest
                             found = True
                             break
                         elif locType==ls.GROCERIES_STORE and isinstance(gDict[dest],ls.GroceriesStore):
-                            walker.home.exit(walker)
+                            gDict[walker.loc].exit(walker)
                             gDict[dest].enter(walker)
                             walker.loc = dest
                             found = True
                             break
                         elif locType ==ls.LEISURE and isinstance(gDict[dest],ls.Leisure):
-                            walker.home.exit(walker)
+                            gDict[walker.loc].exit(walker)
                             gDict[dest].enter(walker)
                             walker.loc = dest
                             found = True
