@@ -15,7 +15,7 @@ virus = Virus(range = 40, pInfection = 1 , healthParams = 1, healingParams = 1)
 loc = buildDefaultLocation(HOME)
 loc.initRendering()
 
-for i in range(100):
+for i in range(100000):
                     
     walker = Walker( 640, # loc_width
                      480, # loc_height
