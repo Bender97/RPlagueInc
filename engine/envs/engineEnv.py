@@ -258,10 +258,10 @@ class EngineEnv(gym.Env):
             gDict= self.gDict #giusto per non scrivere self ogni volta xD
             paths= nx.shortest_path(self.region, source=walker.loc)
             for i in range(0,self.nLocation):
-                if paths[i].length() >0:
-                    pathsDict[paths[i].lenght].append(i)
-            for len in sorted(pathsDict.keys()):
-                for dest in pathsDict[len]:
+                if len(paths[i]) >0:
+                    pathsDict[paths[i]].append(i)
+            for length in sorted(pathsDict.keys()):
+                for dest in pathsDict[lenght]:
                         #scandisce la lista dai nodi più vicini ai più lontani
                         if locType==ls.WORKPLACE and isinstance(gDict[dest],ls.Workplace):
                             walker.home.exit(walker)
