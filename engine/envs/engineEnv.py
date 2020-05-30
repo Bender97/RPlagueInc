@@ -220,12 +220,12 @@ class EngineEnv(gym.Env):
 
         statistics = list(stats.computeStatistics(self).items())
 
-        self.xdata.append(self.day_counter*24)
+        self.xdata.append(self.day_counter)
 
-        self.ydata[0].append(statistics[0])
-        self.ydata[1].append(statistics[1])
-        self.ydata[2].append(statistics[2])
-        self.ydata[3].append(statistics[3])
+        self.ydata[0].append(statistics[0][1])
+        self.ydata[1].append(statistics[1][1])
+        self.ydata[2].append(statistics[2][1])
+        self.ydata[3].append(statistics[3][1])
         
         plt.plot(self.xdata, self.ydata[0], 'bo-')
         plt.plot(self.xdata, self.ydata[1], 'ro-')
@@ -261,9 +261,9 @@ class EngineEnv(gym.Env):
 
             paths= nx.shortest_path(self.region, source=walker.loc)
 
-            for i in range( 0, len(paths) ):
-                if paths[i] != None and len(paths[i])>1:
-                    pathsDict[len(paths[i])].append(i)
+            for key in paths.keys():
+                if len(paths[key])>1:
+                    pathsDict[len(paths[key])].append(key)
             
             for length in sorted(pathsDict.keys()):
                 for dest in pathsDict[length]:
