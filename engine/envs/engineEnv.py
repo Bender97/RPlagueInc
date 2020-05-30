@@ -100,7 +100,9 @@ class EngineEnv(gym.Env):
 
 
     def step(self, action):
+        
         gDict= self.gDict #giusto per non scrivere self ogni volta xD
+        
         for hour in range(0,24): #inizio delle 24 ore
             for loc in gDict.values(): #for every location
                 for walkerType in range(6):
@@ -115,7 +117,6 @@ class EngineEnv(gym.Env):
                                 if atHome:
                                     if(w.home.needFood() and (8<=hour<=10 or 17<=hour<=19)) and random.random() < (1 - w.disobedience):
                                         self.goToNearestLoc(w,ls.GROCERIES_STORE)
-                                        self.gDict[w.loc].buyFood(w.home)
                                         w.wentForGroceries=True
                                         food = w.home.family_qty * random.randint(3,7)
                                         w.home.money-=self.gDict[w.loc].buyFood(food)
@@ -146,7 +147,6 @@ class EngineEnv(gym.Env):
                                 if w.loc == w.homeNode:
                                     if w.home.needFood() and random.random() < (1 - w.disobedience):
                                         self.goToNearestLoc(w, ls.GROCERIES_STORE)
-                                        self.gDict[w.loc].buyFood(w.home)
                                         w.wentForGroceries = True
                                         food = w.home.family_qty * random.randint(3, 7)
                                         w.home.money -= self.gDict[w.loc].buyFood(food)
@@ -166,7 +166,6 @@ class EngineEnv(gym.Env):
                                 if w.loc == w.homeNode:
                                     if w.home.needFood() and random.random() < (1 - w.disobedience):
                                         self.goToNearestLoc(w, ls.GROCERIES_STORE)
-                                        self.gDict[w.loc].buyFood(w.home)
                                         w.wentForGroceries = True
                                         food = w.home.family_qty * random.randint(3, 7)
                                         w.home.money -= self.gDict[w.loc].buyFood(food)
@@ -178,19 +177,19 @@ class EngineEnv(gym.Env):
                                     if random.random() < 0.6:
                                             self.goHome(w)
             loc.run1HOUR(self.virus)
+        
         for loc in gDict.values():  #produce the deaths. tryInfection and tryDisease are called inside location file
             if isinstance(loc,ls.Home):
                 loc.eatFood()
-                for walkerType in range(6):
-                    for w in loc.walkers[walkerType]:
-                        w.updateVirusTimer()
-                        if w.getVirusTimer() ==0:
-                            flag = self.virus.tryDeath(w) #no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
-            #inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
-                            if (flag):
-                                self.deads += 1
+                for w in loc.walkers[h.INFECTED]:
+                    w.updateVirusTimer()
+                    if w.getVirusTimer() ==0:
+                        flag = self.virus.tryDeath(w) #no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
+        #inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
+                        if (flag):
+                            self.deads += 1
 
-        return 
+        return list(stats.computeStatistics(self).items()), 1, False, {}
 
     ##################################################################
 
@@ -217,14 +216,16 @@ class EngineEnv(gym.Env):
     def render(self, mode='human'):
         Gdict = nx.get_node_attributes(self.region, 'LocType')
         
-        loc = Gdict[0]
+        #loc = Gdict[0]
+
+        statistics = list(stats.computeStatistics(self).items())
 
         self.xdata.append(self.day_counter*24)
 
-        self.ydata[0].append(len(loc.walkers[h.SUSCEPTIBLE]))
-        self.ydata[1].append(len(loc.walkers[h.INFECTED]) + len(loc.walkers[h.ASYMPTOMATIC]) + len(loc.walkers[h.INCUBATION]))
-        self.ydata[2].append(len(loc.walkers[h.RECOVERED]))
-        self.ydata[3].append(len(loc.walkers[h.DEAD]))
+        self.ydata[0].append(statistics[0])
+        self.ydata[1].append(statistics[1])
+        self.ydata[2].append(statistics[2])
+        self.ydata[3].append(statistics[3])
         
         plt.plot(self.xdata, self.ydata[0], 'bo-')
         plt.plot(self.xdata, self.ydata[1], 'ro-')
@@ -233,8 +234,6 @@ class EngineEnv(gym.Env):
 
         self.day_counter += 1
         plt.pause(0.1)
-
-
 
 
     def adultHomeProbFcn(self,hour): #hour-dependent,prob to go/stay home
@@ -259,6 +258,7 @@ class EngineEnv(gym.Env):
             pathsDict = defaultdict(list)
             found = False
             gDict= self.gDict #giusto per non scrivere self ogni volta xD
+
             paths= nx.shortest_path(self.region, source=walker.loc)
 
             for i in range( 0, len(paths) ):
