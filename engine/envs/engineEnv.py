@@ -21,6 +21,10 @@ import engine.statistics as stats
 import engine.virus as vir
 from walkers.Walker import Walker
 
+import time
+import matplotlib.pyplot as plt
+import walkers.healthState as h
+
 
 class EngineEnv(gym.Env):
     """
@@ -79,6 +83,10 @@ class EngineEnv(gym.Env):
 
         self.virus = virus
 
+        self.day_counter = 0
+        self.xdata = []
+        self.ydata = [[], [], [], []]
+
         low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
         high = np.array([+math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf])
 
@@ -97,7 +105,7 @@ class EngineEnv(gym.Env):
             for loc in gDict.values(): #for every location
                 for w in loc.walkers:
                     #Adult Schedule
-                    if w.isAdult:
+                    if w.isAdult():
                         if (random.rand() < self.adultHomeProbFcn(hour)) or w.wentForGroceries:
                             self.goHome(w)  # if already at home, nothing happens
                             w.wentForGroceries=False
@@ -202,7 +210,25 @@ class EngineEnv(gym.Env):
 
         return statistics
 
-    #def render(self, mode='human'):
+    def render(self, mode='human'):
+        Gdict = nx.get_node_attributes(self.region, 'LocType')
+        
+        loc = Gdict[0]
+
+        self.xdata.append(self.day_counter*24)
+
+        self.ydata[0].append(len(loc.walkers[h.SUSCEPTIBLE]))
+        self.ydata[1].append(len(loc.walkers[h.INFECTED]) + len(loc.walkers[h.ASYMPTOMATIC]) + len(loc.walkers[h.INCUBATION]))
+        self.ydata[2].append(len(loc.walkers[h.RECOVERED]))
+        self.ydata[3].append(len(loc.walkers[h.DEAD]))
+        
+        plt.plot(self.xdata, self.ydata[0], 'bo-')
+        plt.plot(self.xdata, self.ydata[1], 'ro-')
+        plt.plot(self.xdata, self.ydata[2], 'go-')
+        plt.plot(self.xdata, self.ydata[3], 'ko-')
+
+        self.day_counter += 1
+        plt.pause(0.1)
 
 
 
