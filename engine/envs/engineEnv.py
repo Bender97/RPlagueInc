@@ -165,12 +165,17 @@ class EngineEnv(gym.Env):
                             else:
                                 if w.loc == w.homeNode:
                                     if w.home.needFood() and random.random() < (1 - w.disobedience):
-                                        self.goToNearestLoc(w, ls.GROCERIES_STORE)
-                                        w.wentForGroceries = True
-                                        food = w.home.family_qty * random.randint(3, 7)
-                                        w.home.money -= self.gDict[w.loc].buyFood(food)
-                                        w.home.bringFood(food)
-                                        break
+                                        try:
+                                            print(self.gDict[w.loc])
+                                            self.goToNearestLoc(w, ls.GROCERIES_STORE)
+                                            w.wentForGroceries = True
+                                            food = w.home.family_qty * random.randint(3, 7)
+                                            w.home.money -= self.gDict[w.loc].buyFood(food)
+                                            w.home.bringFood(food)
+                                            break
+                                        except:
+                                            print(self.gDict[w.loc])
+                                            exit()
                                     if random.random() < 0.4:
                                             self.goToNearestLoc(w, ls.LEISURE)
                                 else:
