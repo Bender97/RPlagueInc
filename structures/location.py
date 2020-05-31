@@ -9,16 +9,16 @@ import walkers.healthState as h
 BLACK = (0, 0, 0)
 
 color = [
-    (255, 255, 255), # WHITE - SUSCEPTIBLE
-    (0, 0, 255), # LIGHTGREY - INCUBATION
-    (255, 50, 50), # RED - INFECTED
-    (255, 255, 0), # YELLOW - ASYMPTOMATIC
-    (50, 255, 50), # GREEN - RECOVERED
-    BLACK # BLACK - DEAD
-    ]
+    (255, 255, 255),  # WHITE - SUSCEPTIBLE
+    (0, 0, 255),  # LIGHTGREY - INCUBATION
+    (255, 50, 50),  # RED - INFECTED
+    (255, 255, 0),  # YELLOW - ASYMPTOMATIC
+    (50, 255, 50),  # GREEN - RECOVERED
+    BLACK  # BLACK - DEAD
+]
+
 
 class Location:
-
     '''
     Attributes
     ----------
@@ -28,7 +28,6 @@ class Location:
     walkers : vector of Walkers
     distance_list : vector of pairs of Walkers
     '''
-
 
     def __init__(self, size_x, size_y, max_capacity):
 
@@ -47,11 +46,9 @@ class Location:
 
     # end __init__
 
-
     def enter(self, walker):
         '''
         Make a new Walker enter the Location
-
         Parameters
         ----------
         walker : Walker
@@ -59,13 +56,13 @@ class Location:
         '''
 
         self.walkers[walker.status].append(walker)
+        print("Sono entrato in",self)
 
     # end enter
 
     def exit(self, walker):
         '''
         Make a new Walker enter the Location
-
         Parameters
         ----------
         walker : Walker
@@ -73,19 +70,17 @@ class Location:
         '''
 
         self.walkers[walker.status].remove(walker)
-
+        print("Sono uscito da",self)
     # end exit
 
     def run1HOUR(self, virus):
         '''
         update the context inside the location ( a minute (or second, must decide) of life , for each update call)
-
         1) update positions
         2) tryDisease()
         3) tryDeath()
         4) tryRecovering()
         5) tryInfection()
-
         Parameters
         ----------
         virus: Virus
@@ -99,22 +94,22 @@ class Location:
                     tempx = walker.x + random.randint(-10, 10)
                     tempy = walker.y + random.randint(-10, 10)
 
-                    tempx = (0 if tempx<0 else (self.size_x if tempx>self.size_x else tempx))
-                    tempy = (0 if tempy<0 else (self.size_y if tempy>self.size_y else tempy))
-                    
+                    tempx = (0 if tempx < 0 else (self.size_x if tempx > self.size_x else tempx))
+                    tempy = (0 if tempy < 0 else (self.size_y if tempy > self.size_y else tempy))
+
                     walker.move(tempx, tempy)
 
             # 2) tryDisease()
 
             for incubated in self.walkers[h.INCUBATION]:
-#                if (incubated.getVirusTimer()>0):
-#                    incubated.updateVirusTimer()
-#                else:
+                #                if (incubated.getVirusTimer()>0):
+                #                    incubated.updateVirusTimer()
+                #                else:
                 if (not incubated.getVirusTimer()):
                     flag, period = virus.tryDisease(incubated)
-                    incubated.updateVirusTimer(value = period)
+                    incubated.updateVirusTimer(value=period)
                     self.walkers[h.INCUBATION].remove(incubated)
-                    if (flag): # disease
+                    if (flag):  # disease
                         self.walkers[h.INFECTED].append(incubated)
                     else:
                         self.walkers[h.ASYMPTOMATIC].append(incubated)
@@ -126,9 +121,7 @@ class Location:
                     infected.updateVirusTimer()
                 else:
                     flag = virus.tryDeath(infected)
-
                     self.walkers[h.INFECTED].remove(infected)
-
                     if (flag):
                         self.walkers[h.DEAD].append(infected)
                         print("+1 DEAD")
@@ -138,13 +131,12 @@ class Location:
             # 4) tryRecovering()
 
             for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
-#                if (asymptomatic.getVirusTimer()>0):
-#                    asymptomatic.updateVirusTimer()
+                #                if (asymptomatic.getVirusTimer()>0):
+                #                    asymptomatic.updateVirusTimer()
                 if (not asymptomatic.getVirusTimer()):
                     self.walkers[h.ASYMPTOMATIC].remove(asymptomatic)
                     self.walkers[h.RECOVERED].append(asymptomatic)
                     asymptomatic.setStatus(h.RECOVERED)
-
 
             # 5) tryInfection()
             # CHECK FOR EACH WALKER IF IT's CLOSE TO AN INFECTED
@@ -157,20 +149,19 @@ class Location:
                     if (distance(susceptible, asymptomatic) < virus.range):
                         flag = virus.tryInfection(susceptible)
                         if (flag):
-                            break   # non ha senso fare altri controlli
+                            break  # non ha senso fare altri controlli
                 if not flag:
                     for infected in self.walkers[h.INFECTED]:
                         if (distance(susceptible, infected) < virus.range):
                             flag = virus.tryInfection(susceptible)
                             if (flag):
-                                break   # non ha senso fare altri controlli
+                                break  # non ha senso fare altri controlli
                 if flag:
-                    susceptible.updateVirusTimer(value = flag)
+                    susceptible.updateVirusTimer(value=flag)
                     self.walkers[h.INCUBATION].append(susceptible)
                     self.walkers[h.SUSCEPTIBLE].remove(susceptible)
 
     # end update
-
 
     def initRendering(self):
         '''
@@ -185,7 +176,6 @@ class Location:
     def render(self, virus):
         '''
         render the current situation
-
         Parameters
         ----------
         virus: Virus
@@ -202,18 +192,19 @@ class Location:
             self.screen.fill(BLACK)
 
             font = pygame.font.Font(None, 36)
-            
+
             for walkerStatus in range(6):
                 for walker in self.walkers[walkerStatus]:
                     pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), 5, 0)
-                    pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), int(virus.range/2), 1)
+                    pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), int(virus.range / 2), 1)
 
             pygame.display.update()
             self.fps.tick(30)
+
 
 # end class Location
 
 
 def distance(walker1, walker2):
-    return math.sqrt((walker2.x - walker1.x)**2 + (walker2.y - walker1.y)**2)
+    return math.sqrt((walker2.x - walker1.x) ** 2 + (walker2.y - walker1.y) ** 2)
 # end distance

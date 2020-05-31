@@ -8,7 +8,7 @@ virus = Virus(range = 40, pInfection = 1 , healthParams = 1, healingParams = 1)
 
 #create the cartpole environment
 env = gym.make("engine-v0")
-observation = env.reset(nLocation = 5)
+observation = env.reset(nLocation = 15)
 env.initialize(nLocation = 5, virus = virus)
 #initialize the environment and get the first observation
 #>[-0.01691473  0.04548045 -0.02779662  0.04136515]
