@@ -341,7 +341,7 @@ class EngineEnv(gym.Env):
         pygame.display.update()
         self.fps.tick(30)
         
-        plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics', 'infected (disease)', 'recovered', 'dead'))
+        plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead'))
         
         plt.pause(0.5)
 

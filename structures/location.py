@@ -169,7 +169,7 @@ class Location:
         '''
         pygame.init()
         self.screen = pygame.display.set_mode((self.size_x, self.size_y))
-        pygame.display.set_caption('City')
+        pygame.display.set_caption('Region')
         self.fps = pygame.time.Clock()
         self.paused = False
 
