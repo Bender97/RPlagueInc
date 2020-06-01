@@ -5,7 +5,7 @@ import walkers.healthState as h
 
 class Walker:
 
-    def __init__(self, width, height, age, disobedience, home, homeNode):
+    def __init__(self, width, height, age, disobedience, home, school, workPlace):
         self.status = h.SUSCEPTIBLE
         self.x = random.randint(0,width)
         self.y = random.randint(0,height)
@@ -13,9 +13,12 @@ class Walker:
         self.healingLevel = 0 # tasso di guarigione DAL VIRUS
         self.age = age
         self.disobedience = disobedience
+
         self.home = home #home object, may be omitted, or substituted with the current location to add another data
-        self.homeNode = homeNode #index of home node
-        self.loc = homeNode #conterrà la posizione attuale del walker
+        self.school = school
+        self.workPlace = workPlace
+
+        self.loc = home
         
         # A coundown for disease
         self.TTL = -1
@@ -100,3 +103,11 @@ class Walker:
 
     def hasBadHealth(self):
         return self.healthLevel <= h.badHealth_level
+
+    def exit(self):
+        print(str(self) + " is exiting from: " + str(self.loc))
+        for w in self.loc.walkers[self.status]:
+            print(" there is " + str(w))
+        self.loc.walkers[self.status].remove(self)
+    def enter(self, target):
+        target.walkers[self.status].append(self)

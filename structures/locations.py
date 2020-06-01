@@ -63,6 +63,7 @@ class Home (Location):
         self.food_qty = food_qty
         self.family_qty = family_qty
         self.money = money
+        self.type = HOME
     # end __init__
 
     def needFood(self):
@@ -92,6 +93,7 @@ class Workplace (Location):
         super().__init__(size_x, size_y, max_capacity)
         self.rest_days = rest_days
         self.salary = salary
+        self.type = WORKPLACE
     # end __init__
 
     def getSalary(self):
@@ -125,6 +127,7 @@ class GroceriesStore(Location):
 
         super().__init__(size_x, size_y, max_capacity)
         self.food_price = food_price
+        self.type = GROCERIES_STORE
     # end __init__
 
     def buyFood(self, food_qty):
@@ -145,6 +148,7 @@ class School (Location):
 
         super().__init__(size_x, size_y, max_capacity)
         self.rest_days = REST_DAYS
+        self.type = SCHOOL
     # end __init__
 
     def getRestDays(self):
@@ -165,6 +169,7 @@ class Leisure (Location):
 
         super().__init__(size_x, size_y, max_capacity)
         self.rest_days = REST_DAYS
+        self.type = LEISURE
     # end __init__
 
 # end class Leisure

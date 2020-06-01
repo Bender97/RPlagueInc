@@ -6,11 +6,11 @@ permalink: https://perma.cc/C9ZM-652R
 
 import math
 import gym
-from gym import spaces, logger
+from gym import spaces
 import random
 import numpy as np
 import structures.locations as ls
-import networkx as nx
+
 import structures.location as l
 import engine.popgen as popgen
 import engine.regiongen as reggen
@@ -75,12 +75,17 @@ class EngineEnv(gym.Env):
 
     # TODO
     def __init__(self):
+        self.nLocation = None
+        self.nHouses = None
+
+        self.locs = [[], [], [], [], []]
         return
 
-    def initialize(self, nLocation, virus):
-        self.nLocation = nLocation
-        self.virus = virus
-        self.gDict = nx.get_node_attributes(self.region, 'LocType')  # dict that links nodes to locations objects
+    def initialize(self, virus):
+        
+        if (self.nHouses == None):
+            print("error: nHouses is None. Have you called reset() before calling initialize()?")
+            exit(1)
 
         self.virus = virus
 
@@ -103,7 +108,7 @@ class EngineEnv(gym.Env):
         self.paused = False
 
         # calculate position on screen for each location
-        self.locPos = {}
+        self.locPos = [[], [], [], [], []]
         border = 10
         padding = 10
         
@@ -114,157 +119,88 @@ class EngineEnv(gym.Env):
         currentdy = border
 
         loc = None
+        
 
-        for key in self.gDict.keys():
-            loc = self.gDict[key]
+        for locs in self.locs:
+            for loc in locs:
 
-            tempx = currentdx + loc.size_x + padding
+                tempx = currentdx + loc.size_x + padding
 
-            tempy = currentdy + loc.size_y + padding
+                tempy = currentdy + loc.size_y + padding
 
-            if (tempy > self.maxHeight):
-                self.maxHeight = tempy
+                if (tempy > self.maxHeight):
+                    self.maxHeight = tempy
 
-            if (tempx > self.maxWidth):
-                # vai a capo
-                currentdy = self.maxHeight
-                self.locPos[key] = pygame.Rect(border, currentdy, loc.size_x, loc.size_y)
-                currentdx = border + loc.size_x + padding
-            else:
-                self.locPos[key] = pygame.Rect(currentdx, currentdy, loc.size_x, loc.size_y)
-                currentdx = tempx
-                loc = None
+                if (tempx > self.maxWidth):
+                    # vai a capo
+                    currentdy = self.maxHeight
+                    self.locPos[loc.type].append(pygame.Rect(border, currentdy, loc.size_x, loc.size_y))
+                    currentdx = border + loc.size_x + padding
+                else:
+                    self.locPos[loc.type].append(pygame.Rect(currentdx, currentdy, loc.size_x, loc.size_y))
+                    currentdx = tempx
+                    loc = None
+                
         
         if (loc != None):
             self.maxHeight += loc.size_y + border
 
     # end __init__
+    ##################################################################
 
     def step(self, action):
 
-        gDict = self.gDict  # giusto per non scrivere self ogni volta xD
-
         for hour in range(0, 24):  # inizio delle 24 ore
-            for loc in gDict.values():  # for every location
-                for walkerType in range(h.statusNum):
-                    for w in loc.walkers[walkerType]:
-                        # Adult Schedule
-                        if w.isAdult():
-                            if (random.random() < self.adultHomeProbFcn(hour)) or w.wentForGroceries:
-                                self.goHome(w)  # if already at home, nothing happens
-                                w.wentForGroceries = False
+            for locList in self.locs:
+                for loc in locList:
+                    for walkerType in range(h.statusNum):
+                        for w in loc.walkers[walkerType]:
+                            if (w.loc.type == ls.HOME):
+                                self.goToLoc(w, ls.WORKPLACE)
                             else:
-                                atHome = (w.homeNode == w.loc)
-                                if atHome:
-                                    if (w.home.needFood() and (
-                                            8 <= hour <= 10 or 17 <= hour <= 19)) and random.random() < (
-                                            1 - w.disobedience):
-                                        print("Sto andando a comprare cibo")
-                                        self.goToNearestLoc(w, ls.GROCERIES_STORE)
-                                        print("Ora sono a" ,gDict[w.loc])
-                                        w.wentForGroceries = True
-                                        food = w.home.family_qty * random.randint(3, 7)
-                                        w.home.money -= self.gDict[w.loc].buyFood(food)
-                                        w.home.bringFood(food)
-                                        break
-                                activityLoc = np.random.choice([ls.WORKPLACE, ls.LEISURE], p=[0.75, 0.25])
-                                self.goToNearestLoc(w, activityLoc)
-                        # Child
-                        elif w.isChild():
-                            if not (7 <= hour <= 19) or w.wentForGroceries:
-                                self.goHome(w)
-                                w.wentForGroceries = False
-                            elif (7 <= hour <= 8):
-                                if w.loc == w.homeNode:
-                                    if random.random() < 0.7:
-                                        self.goToNearestLoc(w, ls.SCHOOL)
-                            elif (hour == 9):
-                                if w.loc == w.homeNode:
-                                    self.goToNearestLoc(w, ls.SCHOOL)
-                            elif (13 <= hour <= 14):
-                                if w.loc != w.homeNode:
-                                    if random.random() < 0.5:
-                                        self.goToNearestLoc(w, ls.SCHOOL)
-                            elif (hour == 15):
-                                if w.loc != w.homeNode:
-                                    self.goHome(w)
-                            elif (16 <= hour <= 19):
-                                if w.loc == w.homeNode:
-                                    if w.home.needFood() and random.random() < (1 - w.disobedience):
-                                        print("Sto andando a comprare cibo")
-                                        self.goToNearestLoc(w, ls.GROCERIES_STORE)
-                                        print("Ora sono a" ,gDict[w.loc])
-                                        w.wentForGroceries = True
-                                        food = w.home.family_qty * random.randint(3, 7)
-                                        w.home.money -= self.gDict[w.loc].buyFood(food)
-                                        w.home.bringFood(food)
-                                        break
-                                    if random.random() < 0.6:
-                                        self.goToNearestLoc(w, ls.LEISURE)  # go out and play a little
-                                else:
-                                    if random.random() < 0.4:
-                                        self.goHome(w)
-                        # Elder
-                        else:
-                            if not (7 <= hour <= 19) or w.wentForGroceries:
-                                self.goHome(w)
-                                w.wentForGroceries = False
-                            else:
-                                if w.loc == w.homeNode:
-                                    if w.home.needFood() and random.random() < (1 - w.disobedience):
-                                        print(self.gDict[w.loc])
-                                        print("Sto andando a comprare cibo")
-                                        self.goToNearestLoc(w, ls.GROCERIES_STORE)
-                                        print("Ora sono a" ,gDict[w.loc])
-                                        w.wentForGroceries = True
-                                        food = w.home.family_qty * random.randint(3, 7)
-                                        w.home.money -= self.gDict[w.loc].buyFood(food)
-                                        w.home.bringFood(food)
-                                        break
-                                    if random.random() < 0.4:
-                                        self.goToNearestLoc(w, ls.LEISURE)
-                                else:
-                                    if random.random() < 0.6:
-                                        self.goHome(w)
-                loc.run1HOUR(self.virus)
+                                self.goToLoc(w, ls.HOME)
+                    loc.run1HOUR(self.virus)
 
-        for loc in gDict.values():  # produce the deaths. tryInfection and tryDisease are called inside location file
-            if isinstance(loc, ls.Home):
-                loc.eatFood()
+        for locList in self.locs:
+            for loc in locList:  # produce the deaths. tryInfection and tryDisease are called inside location file
+                if isinstance(loc, ls.Home):
+                    loc.eatFood()
+                    for w in loc.walkers[h.INFECTED]:
+                        w.updateVirusTimer()
+                        if w.getVirusTimer() == 0:
+                            flag = self.virus.tryDeath(
+                                w)  # no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
+                            # inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
+                            if (flag):
+                                self.deads += 1
+                for w in loc.walkers[h.INCUBATION]:
+                    w.updateVirusTimer()
                 for w in loc.walkers[h.INFECTED]:
                     w.updateVirusTimer()
-                    if w.getVirusTimer() == 0:
-                        flag = self.virus.tryDeath(
-                            w)  # no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
-                        # inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
-                        if (flag):
-                            self.deads += 1
-            for w in loc.walkers[h.INCUBATION]:
-                w.updateVirusTimer()
-            for w in loc.walkers[h.INFECTED]:
-                w.updateVirusTimer()
-            for w in loc.walkers[h.ASYMPTOMATIC]:
-                w.updateVirusTimer()
+                for w in loc.walkers[h.ASYMPTOMATIC]:
+                    w.updateVirusTimer()
 
         return list(stats.computeStatistics(self).items()), 1, False, {}
 
-    ##################################################################
+    def reset(self, nHouses):
+        self.nHouses = nHouses
+        
+        reggen.regionGen(self)
 
-    def reset(self, nLocation):
-        self.region = reggen.regionGen(nLocation)
-        popgen.genPopulation(self.region)
+        popgen.genPopulation(self)
+
+
         self.steps_done = 0
-        self.nLocation = nLocation
 
         self.deads = 0
 
         self.contact_list = {}
 
-        Gdict = nx.get_node_attributes(self.region, 'LocType')
-        for key in Gdict.keys():
-            for statusType in range(h.statusNum):
-                for walker in Gdict[key].walkers[statusType]:
-                    self.contact_list[walker] = 0
+        for locList in self.locs:
+            for loc in locList:
+                for statusType in range(h.statusNum):
+                    for walker in loc.walkers[statusType]:
+                        self.contact_list[walker] = 0
 
         statistics = list(stats.computeStatistics(self).items())
 
@@ -303,7 +239,6 @@ class EngineEnv(gym.Env):
 
         self.day_counter += 1
 
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -315,35 +250,26 @@ class EngineEnv(gym.Env):
         if not self.paused:
             self.screen.fill((0, 0, 0))
 
-            for key in self.gDict:
-                loc = self.gDict[key]
+            for locs in self.locs:
+                idx = 0
+                for loc in locs:
 
-                posx = self.locPos[key][0]
-                posy = self.locPos[key][1]
+                    posx = self.locPos[loc.type][idx][0]
+                    posy = self.locPos[loc.type][idx][1]
 
-                if (isinstance(loc, ls.Home)):
-                    color = ls.colors[ls.HOME]
-                elif (isinstance(loc, ls.Workplace)):
-                    color = ls.colors[ls.WORKPLACE]
-                elif (isinstance(loc, ls.GroceriesStore)):
-                    color = ls.colors[ls.GROCERIES_STORE]
-                elif (isinstance(loc, ls.School)):
-                    color = ls.colors[ls.SCHOOL]
-                elif (isinstance(loc, ls.Leisure)):
-                    color = ls.colors[ls.LEISURE]
-
-                pygame.draw.rect(self.screen, color, pygame.Rect(posx, posy, loc.size_x, loc.size_y))
-                
-                for walkerType in range(h.statusNum):
-                    for walker in loc.walkers[walkerType]:
-                        pygame.draw.circle(self.screen, h.colors[walkerType], (posx+walker.x, posy+walker.y), 3, 0)
+                    pygame.draw.rect(self.screen, ls.colors[loc.type], self.locPos[loc.type][idx])
+                    
+                    for walkerType in range(h.statusNum):
+                        for walker in loc.walkers[walkerType]:
+                            pygame.draw.circle(self.screen, h.colors[walkerType], (posx+walker.x, posy+walker.y), 3, 0)
+                    idx += 1
 
         pygame.display.update()
         self.fps.tick(30)
         
         plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead'))
-        
-        plt.pause(0.5)
+        input()
+        plt.pause(0.1)
 
     def adultHomeProbFcn(self, hour):  # hour-dependent,prob to go/stay home
         if (hour == 12):
@@ -363,53 +289,22 @@ class EngineEnv(gym.Env):
 
     # def close(self):
 
-    def goToNearestLoc(self, walker, locType):  # movimento dalla posizione attuale al posto selezionato più vicino
-        pathsDict = defaultdict(list)
-        found = False
-        gDict = self.gDict  # giusto per non scrivere self ogni volta xD
-
-        paths = nx.shortest_path(self.region, source=walker.loc)
-
-        for key in paths.keys():
-            if len(paths[key]) > 1:
-                pathsDict[len(paths[key])].append(key)
-
-        for length in sorted(pathsDict.keys()):
-            for destination in pathsDict[length]:
-                # scandisce la lista dai nodi più vicini ai più lontani
-                if locType == ls.WORKPLACE and isinstance(gDict[destination], ls.Workplace):
-                    gDict[walker.loc].exit(walker)
-                    gDict[destination].enter(walker)
-                    walker.loc = destination
-                    found = True
-                    break
-                elif locType == ls.SCHOOL and isinstance(gDict[destination], ls.School):
-                    gDict[walker.loc].exit(walker)
-                    gDict[destination].enter(walker)
-                    walker.loc = destination
-                    found = True
-                    break
-                elif locType == ls.GROCERIES_STORE and isinstance(gDict[destination], ls.GroceriesStore):
-                    print("I found a Grocery")
-                    gDict[walker.loc].exit(walker)
-                    gDict[destination].enter(walker)
-                    print("Sono nella grocery:",destination,gDict[destination])
-                    walker.loc = destination
-                    found = True
-                    break
-                elif locType == ls.LEISURE and isinstance(gDict[destination], ls.Leisure):
-                    gDict[walker.loc].exit(walker)
-                    gDict[destination].enter(walker)
-                    walker.loc = destination
-                    found = True
-                    break
-            if found:
-                break
-        if not found:
-            print("Non ho trovato nessun posto di questo tipo",locType)
-
-    def goHome(self, walker):  # torna a casa (se non ci è già)
-        if not (walker.loc == walker.homeNode):
-            self.gDict[walker.loc].exit(walker)
-            walker.home.enter(walker)
-            walker.loc = walker.homeNode
+    def goToLoc(self, walker, locType):
+        if (locType == ls.HOME):
+            walker.exit()
+            walker.enter(walker.home)
+        elif (locType == ls.WORKPLACE):
+            walker.exit()
+            walker.enter(walker.workPlace)
+        elif (locType == ls.SCHOOL):
+            walker.exit()
+            walker.enter(walker.school)
+        elif (locType == ls.LEISURE):
+            target = random.randint(0, len(self.locs[ls.LEISURE]) -1)
+            walker.exit()
+            walker.enter(self.locs[ls.LEISURE][target])
+            
+        elif (locType == ls.GROCERIES_STORE):
+            target = random.randint(0, len(self.locs[ls.GROCERIES_STORE])-1)
+            walker.exit()
+            walker.enter(self.locs[ls.GROCERIES_STORE][target])

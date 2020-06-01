@@ -3,15 +3,15 @@ import engine.envs.engineEnv
 import time
 from engine.virus import Virus
 
-virus = Virus(range = 40, pInfection = 1 , healthParams = 1, healingParams = 1)
+virus = Virus(range = 3, pInfection = 1 , healthParams = 1, healingParams = 1)
 
 
 #create the cartpole environment
 env = gym.make("engine-v0")
 
-observation = env.reset(nLocation = 15)
+observation = env.reset(nHouses = 15)
 
-env.initialize(nLocation = 5, virus = virus)
+env.initialize(virus = virus)
 env.initRendering()
 
 for _ in range(1000):
@@ -23,7 +23,7 @@ for _ in range(1000):
     if (reward==0):
         input()
 
-    time.sleep(0.1)
+    #time.sleep(0.1)
     if done:
         observation = env.reset()
 env.close()
