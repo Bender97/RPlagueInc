@@ -12,9 +12,9 @@ def genPopulation(env):
         maxPeople = home.max_capacity
         generatedPeople = random.randint(1, maxPeople)
 
-        for i in range(generatedPeople):
+        for _ in range(generatedPeople):
 
-            w = Walker(home.size_x, 
+            w = Walker( home.size_x, 
                         home.size_y, 
                         random.randint(1, 100), 
                         random.random(), 
@@ -31,6 +31,8 @@ def genPopulation(env):
             
             ################# end
 
-            home.enter(w)
+            w.enter(w.home)
 
             num_people += 1
+
+    print("in tutto " + str(num_people) + " persone")

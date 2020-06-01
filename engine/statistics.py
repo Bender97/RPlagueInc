@@ -54,7 +54,7 @@ def computeStatistics(engine):
         secondary_inf_accum += engine.contact_list[w]
     # end for
 
-    statistics[R0] = secondary_inf_accum / len(engine.contact_list)
+#    statistics[R0] = secondary_inf_accum / len(engine.contact_list)
 
 
     return statistics

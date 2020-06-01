@@ -56,9 +56,10 @@ class Location:
         '''
 
         self.walkers[walker.status].append(walker)
+        walker.loc = self
         print("Sono entrato in",self)
 
-    # end enter
+    # end enter #w.loc = w.workPlace
 
     def exit(self, walker):
         '''
@@ -93,9 +94,20 @@ class Location:
                 for walker in self.walkers[walkerStatus]:
                     tempx = walker.x + random.randint(-4, 4)
                     tempy = walker.y + random.randint(-4, 4)
+                    
+                    #tempx = (0 if tempx < 0 else (self.size_x if tempx > self.size_x else tempx))
+                    #tempy = (0 if tempy < 0 else (self.size_y if tempy > self.size_y else tempy))
 
-                    tempx = (0 if tempx < 0 else (self.size_x if tempx > self.size_x else tempx))
-                    tempy = (0 if tempy < 0 else (self.size_y if tempy > self.size_y else tempy))
+                    if (tempx<0):
+                        tempx = 0
+                    elif tempx>self.size_x:
+                        tempx = self.size_x
+                    
+                    if (tempy<0):
+                        tempy = 0
+                    elif tempy>self.size_y:
+                        tempy = self.size_y
+
 
                     walker.move(tempx, tempy)
 
@@ -133,7 +145,7 @@ class Location:
             for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
                 #                if (asymptomatic.getVirusTimer()>0):
                 #                    asymptomatic.updateVirusTimer()
-                if (not asymptomatic.getVirusTimer()):
+                if (asymptomatic.getVirusTimer() <= 0):
                     self.walkers[h.ASYMPTOMATIC].remove(asymptomatic)
                     self.walkers[h.RECOVERED].append(asymptomatic)
                     asymptomatic.setStatus(h.RECOVERED)

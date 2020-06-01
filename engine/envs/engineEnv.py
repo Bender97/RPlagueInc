@@ -70,7 +70,7 @@ class EngineEnv(gym.Env):
 
     metadata = {
         'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second': 50
+        'video.frames_per_second': 50                       # not so true ..
     }
 
     # TODO
@@ -88,6 +88,8 @@ class EngineEnv(gym.Env):
             exit(1)
 
         self.virus = virus
+
+        self.shiftQueue = []
 
         self.day_counter = 0
         self.xdata = []
@@ -109,73 +111,92 @@ class EngineEnv(gym.Env):
 
         # calculate position on screen for each location
         self.locPos = [[], [], [], [], []]
+        
         border = 10
         padding = 10
-        
-        self.maxWidth = 500
-        self.maxHeight = border
 
+        self.maxWidth = 500         # static
+        self.maxHeight = border     # dinamically updated
+
+        # these two indicates the next position of a location
         currentdx = border
         currentdy = border
-
-        loc = None
-        
 
         for locs in self.locs:
             for loc in locs:
 
-                tempx = currentdx + loc.size_x + padding
+                #1) check the current location can fit the window (accounting also the border value)
 
-                tempy = currentdy + loc.size_y + padding
+                if (currentdx + loc.size_x + border < self.maxWidth):
 
-                if (tempy > self.maxHeight):
-                    self.maxHeight = tempy
-
-                if (tempx > self.maxWidth):
-                    # vai a capo
-                    currentdy = self.maxHeight
-                    self.locPos[loc.type].append(pygame.Rect(border, currentdy, loc.size_x, loc.size_y))
-                    currentdx = border + loc.size_x + padding
-                else:
                     self.locPos[loc.type].append(pygame.Rect(currentdx, currentdy, loc.size_x, loc.size_y))
-                    currentdx = tempx
-                    loc = None
-                
-        
-        if (loc != None):
-            self.maxHeight += loc.size_y + border
+                    # prepare for next 
+                    currentdx += loc.size_x + padding
+
+                    # check for maxHeight (for next line height)
+                    tempy = currentdy + loc.size_y
+                    if (tempy > self.maxHeight):
+                        self.maxHeight = tempy
+
+                else:
+                    # go to next line
+                    currentdy = self.maxHeight + padding
+                    currentdx = border
+                    self.locPos[loc.type].append(pygame.Rect(currentdx, currentdy, loc.size_x, loc.size_y))
+
+                    currentdx += loc.size_x + padding
+
+        self.maxHeight += border
 
     # end __init__
     ##################################################################
 
     def step(self, action):
 
-        for hour in range(0, 24):  # inizio delle 24 ore
-            for locList in self.locs:
-                for loc in locList:
+        for hour in range(0, 1):  # inizio delle 24 ore
+
+            for locList in self.locs:   # locList: one for each (HOME, WORKPLACE, SCHOOL, LEISURE, GROCERIES_STORE)
+                for loc in locList:     
                     for walkerType in range(h.statusNum):
                         for w in loc.walkers[walkerType]:
                             if (w.loc.type == ls.HOME):
                                 self.goToLoc(w, ls.WORKPLACE)
                             else:
                                 self.goToLoc(w, ls.HOME)
-                    loc.run1HOUR(self.virus)
 
+            # commit each shifted in the queue
+            self.commitShift()
+
+            # shift committed, it's time to run the hour
+            for locList in self.locs:
+                for loc in locList:
+                    loc.run1HOUR(self.virus)
+                
+        # for each type of location:
         for locList in self.locs:
-            for loc in locList:  # produce the deaths. tryInfection and tryDisease are called inside location file
-                if isinstance(loc, ls.Home):
-                    loc.eatFood()
-                    for w in loc.walkers[h.INFECTED]:
-                        w.updateVirusTimer()
-                        if w.getVirusTimer() == 0:
-                            flag = self.virus.tryDeath(
-                                w)  # no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
-                            # inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
-                            if (flag):
-                                self.deads += 1
+            #1) for each HOME:
+            #   - must buyFood
+            #   - death is knocking on terminal infected door
+            for loc in self.locs[ls.HOME]:
+                loc.eatFood()
+                for w in loc.walkers[h.INFECTED]:
+                    w.updateVirusTimer()
+                    if w.getVirusTimer() <= 0:
+                        flag = self.virus.tryDeath(w)  # no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
+                        w.loc.walkers[h.INFECTED].remove(w)
+                        if (flag):  # disease
+                            #self.walkers[h.DEAD].append(w) 
+                            w.loc = None
+                            self.deads += 1
+                        else:
+                            w.loc.walkers[h.RECOVERED].append(w)
+
+            #2) for each loc, update TTLs
+            for loc in locList:  # produce the deaths. tryInfection and tryDisease are called inside location file                
                 for w in loc.walkers[h.INCUBATION]:
                     w.updateVirusTimer()
                 for w in loc.walkers[h.INFECTED]:
+                    print(w.TTL)
                     w.updateVirusTimer()
                 for w in loc.walkers[h.ASYMPTOMATIC]:
                     w.updateVirusTimer()
@@ -222,7 +243,6 @@ class EngineEnv(gym.Env):
 
     def render(self, mode='human'):
         
-
         statistics = list(stats.computeStatistics(self).items())
 
         self.xdata.append(self.day_counter)
@@ -268,7 +288,6 @@ class EngineEnv(gym.Env):
         self.fps.tick(30)
         
         plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead'))
-        input()
         plt.pause(0.1)
 
     def adultHomeProbFcn(self, hour):  # hour-dependent,prob to go/stay home
@@ -290,21 +309,30 @@ class EngineEnv(gym.Env):
     # def close(self):
 
     def goToLoc(self, walker, locType):
-        if (locType == ls.HOME):
-            walker.exit()
-            walker.enter(walker.home)
-        elif (locType == ls.WORKPLACE):
-            walker.exit()
-            walker.enter(walker.workPlace)
-        elif (locType == ls.SCHOOL):
-            walker.exit()
-            walker.enter(walker.school)
-        elif (locType == ls.LEISURE):
-            target = random.randint(0, len(self.locs[ls.LEISURE]) -1)
-            walker.exit()
-            walker.enter(self.locs[ls.LEISURE][target])
-            
-        elif (locType == ls.GROCERIES_STORE):
-            target = random.randint(0, len(self.locs[ls.GROCERIES_STORE])-1)
-            walker.exit()
-            walker.enter(self.locs[ls.GROCERIES_STORE][target])
+        self.shiftQueue.append((walker, locType))
+
+    def commitShift(self):
+        for elem in self.shiftQueue:
+            locType = elem[1]
+            walker = elem[0]
+
+            if (locType == ls.HOME):
+                walker.exit()
+                walker.enter(walker.home)
+            elif (locType == ls.WORKPLACE):            
+                walker.exit()
+                walker.enter(walker.workPlace)
+            elif (locType == ls.SCHOOL):
+                walker.exit()
+                walker.enter(walker.school)
+            elif (locType == ls.LEISURE):
+                target = random.randint(0, len(self.locs[ls.LEISURE]) -1)
+                walker.exit()
+                walker.enter(self.locs[ls.LEISURE][target])
+                
+            elif (locType == ls.GROCERIES_STORE):
+                target = random.randint(0, len(self.locs[ls.GROCERIES_STORE])-1)
+                walker.exit()
+                walker.enter(self.locs[ls.GROCERIES_STORE][target])
+
+        self.shiftQueue = []

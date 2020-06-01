@@ -14,11 +14,11 @@ class Walker:
         self.age = age
         self.disobedience = disobedience
 
-        self.home = home #home object, may be omitted, or substituted with the current location to add another data
+        self.home = home
         self.school = school
         self.workPlace = workPlace
 
-        self.loc = home
+        self.loc = self.home
         
         # A coundown for disease
         self.TTL = -1
@@ -105,9 +105,12 @@ class Walker:
         return self.healthLevel <= h.badHealth_level
 
     def exit(self):
-        print(str(self) + " is exiting from: " + str(self.loc))
-        for w in self.loc.walkers[self.status]:
-            print(" there is " + str(w))
+        
         self.loc.walkers[self.status].remove(self)
+        self.loc = None
+
     def enter(self, target):
         target.walkers[self.status].append(self)
+        self.loc = target
+        self.x = random.randint(0, self.loc.size_x)
+        self.y = random.randint(0, self.loc.size_y)
