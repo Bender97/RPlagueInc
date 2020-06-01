@@ -159,10 +159,77 @@ class EngineEnv(gym.Env):
                 for loc in locList:     
                     for walkerType in range(h.statusNum):
                         for w in loc.walkers[walkerType]:
-                            if (w.loc.type == ls.HOME):
-                                self.goToLoc(w, ls.WORKPLACE)
+                            # Adult Schedule
+                            if w.isAdult():
+                                if (random.random() < self.adultHomeProbFcn(hour)) or w.wentForGroceries:
+                                    self.goToLoc(w, ls.HOME)  # if already at home, nothing happens
+                                    w.wentForGroceries = False
+                                else:
+                                    atHome = (w.home == w.loc)
+                                    if atHome:
+                                        if (w.home.needFood() and (
+                                                8 <= hour <= 10 or 17 <= hour <= 19)) and random.random() < (
+                                                1 - w.disobedience):
+                                            self.goToLoc(w, ls.GROCERIES_STORE)
+                                            w.wentForGroceries = True
+                                            food = w.home.family_qty * random.randint(3, 7)
+                                            w.home.money -= w.loc.buyFood(food)
+                                            w.home.bringFood(food)
+                                            break
+                                    activityLoc = np.random.choice([ls.WORKPLACE, ls.LEISURE], p=[0.75, 0.25])
+                                    self.goToLoc(w, activityLoc)
+                            # Child
+                            elif w.isChild():
+                                if not (7 <= hour <= 19) or w.wentForGroceries:
+                                    self.goToLoc(w, ls.HOME)
+                                    w.wentForGroceries = False
+                                elif (7 <= hour <= 8):
+                                    if w.loc == w.home:
+                                        if random.random() < 0.7:
+                                            self.goToLoc(w, ls.SCHOOL)
+                                elif (hour == 9):
+                                    if w.loc == w.home:
+                                        self.goToLoc(w, ls.SCHOOL)
+                                elif (13 <= hour <= 14):
+                                    if w.loc != w.home:
+                                        if random.random() < 0.5:
+                                            self.goToLoc(w, ls.SCHOOL)
+                                elif (hour == 15):
+                                    if w.loc != w.home:
+                                        self.goToLoc(w, ls.HOME)
+                                elif (16 <= hour <= 19):
+                                    if w.loc == w.home:
+                                        if w.home.needFood() and random.random() < (1 - w.disobedience):
+                                            self.goToLoc(w, ls.GROCERIES_STORE)
+                                            w.wentForGroceries = True
+                                            food = w.home.family_qty * random.randint(3, 7)
+                                            w.home.money -= w.loc.buyFood(food)
+                                            w.home.bringFood(food)
+                                            break
+                                        if random.random() < 0.6:
+                                            self.goToLoc(w, ls.LEISURE)  # go out and play a little
+                                    else:
+                                        if random.random() < 0.4:
+                                            self.goToLoc(w, ls.HOME)
+                            # Elder
                             else:
-                                self.goToLoc(w, ls.HOME)
+                                if not (7 <= hour <= 19) or w.wentForGroceries:
+                                    self.goToLoc(w, ls.HOME)
+                                    w.wentForGroceries = False
+                                else:
+                                    if w.loc == w.home:
+                                        if w.home.needFood() and random.random() < (1 - w.disobedience):
+                                            self.goToLoc(w, ls.GROCERIES_STORE)
+                                            w.wentForGroceries = True
+                                            food = w.home.family_qty * random.randint(3, 7)
+                                            w.home.money -= w.loc.buyFood(food)
+                                            w.home.bringFood(food)
+                                            break
+                                        if random.random() < 0.4:
+                                            self.goToLoc(w, ls.LEISURE)
+                                    else:
+                                        if random.random() < 0.6:
+                                            self.goToLoc(w, ls.HOME)
 
             # commit each shifted in the queue
             self.commitShift()
@@ -197,6 +264,9 @@ class EngineEnv(gym.Env):
                     w.updateVirusTimer()
                 for w in loc.walkers[h.INFECTED]:
                     print(w.TTL)
+                    if (w.TTL == -1):
+                        w.loc.walkers[h.INFECTED].remove(w)
+                        continue
                     w.updateVirusTimer()
                 for w in loc.walkers[h.ASYMPTOMATIC]:
                     w.updateVirusTimer()
