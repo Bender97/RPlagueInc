@@ -12,9 +12,17 @@ GROCERIES_STORE = 2
 SCHOOL = 3
 LEISURE = 4
 
+colors = (
+    (255,182,193), # HOME pink
+    (220,220,220), # WORKPLACE gainsboro (era bello il nome, è un grigio chiaro)
+    (152, 118, 84), # GROCERIES_STORE marroncino chiaro
+    (231, 251, 231), # SCHOOL lightgreen
+    (216,191,216), # LEISURE lightpurple
+    )
+
 # Home default parameters
-HOME_X = 640 # HOME_X = 20
-HOME_Y = 480 # HOME_Y = 30
+HOME_X = 20 # HOME_X = 20
+HOME_Y = 30 # HOME_Y = 30
 HOME_CAPACITY = 6
 
 STARTING_FOOD = 10

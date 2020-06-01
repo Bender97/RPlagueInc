@@ -38,7 +38,7 @@ def computeStatistics(engine):
     # for each location in the region compute the SIR statistics + M
 
     for ID, loc in nx.get_node_attributes(engine.region, 'LocType').items():
-        statistics[S] += len(loc.walkers[h.SUSCEPTIBLE]) + len(loc.walkers[h.ASYMPTOMATIC])
+        statistics[S] += len(loc.walkers[h.SUSCEPTIBLE]) + len(loc.walkers[h.ASYMPTOMATIC]) + len(loc.walkers[h.INCUBATION])
         statistics[I] += len(loc.walkers[h.INFECTED])
         statistics[R] += len(loc.walkers[h.RECOVERED])
         if isinstance(loc, Home):

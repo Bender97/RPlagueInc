@@ -17,6 +17,8 @@ import engine.regiongen as reggen
 from collections import defaultdict
 import engine.statistics as stats
 
+import pygame
+
 import engine.virus as vir
 from walkers.Walker import Walker
 
@@ -85,6 +87,7 @@ class EngineEnv(gym.Env):
         self.day_counter = 0
         self.xdata = []
         self.ydata = [[], [], [], []]
+        
 
         low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
         high = np.array([+math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf])
@@ -94,6 +97,47 @@ class EngineEnv(gym.Env):
 
         self.steps_done = None
 
+        # for pygame rendering
+        self.screen = None
+        self.fps = 0
+        self.paused = False
+
+        # calculate position on screen for each location
+        self.locPos = {}
+        border = 10
+        padding = 10
+        
+        self.maxWidth = 500
+        self.maxHeight = border
+
+        currentdx = border
+        currentdy = border
+
+        loc = None
+
+        for key in self.gDict.keys():
+            loc = self.gDict[key]
+
+            tempx = currentdx + loc.size_x + padding
+
+            tempy = currentdy + loc.size_y + padding
+
+            if (tempy > self.maxHeight):
+                self.maxHeight = tempy
+
+            if (tempx > self.maxWidth):
+                # vai a capo
+                currentdy = self.maxHeight
+                self.locPos[key] = pygame.Rect(border, currentdy, loc.size_x, loc.size_y)
+                currentdx = border + loc.size_x + padding
+            else:
+                self.locPos[key] = pygame.Rect(currentdx, currentdy, loc.size_x, loc.size_y)
+                currentdx = tempx
+                loc = None
+        
+        if (loc != None):
+            self.maxHeight += loc.size_y + border
+
     # end __init__
 
     def step(self, action):
@@ -102,7 +146,7 @@ class EngineEnv(gym.Env):
 
         for hour in range(0, 24):  # inizio delle 24 ore
             for loc in gDict.values():  # for every location
-                for walkerType in range(6):
+                for walkerType in range(h.statusNum):
                     for w in loc.walkers[walkerType]:
                         # Adult Schedule
                         if w.isAdult():
@@ -182,7 +226,7 @@ class EngineEnv(gym.Env):
                                 else:
                                     if random.random() < 0.6:
                                         self.goHome(w)
-            loc.run1HOUR(self.virus)
+                loc.run1HOUR(self.virus)
 
         for loc in gDict.values():  # produce the deaths. tryInfection and tryDisease are called inside location file
             if isinstance(loc, ls.Home):
@@ -195,6 +239,12 @@ class EngineEnv(gym.Env):
                         # inserire modifiche apportate dall'azione al resto dell'engine, da fare alla fine della giornata (in questo punto del codice)
                         if (flag):
                             self.deads += 1
+            for w in loc.walkers[h.INCUBATION]:
+                w.updateVirusTimer()
+            for w in loc.walkers[h.INFECTED]:
+                w.updateVirusTimer()
+            for w in loc.walkers[h.ASYMPTOMATIC]:
+                w.updateVirusTimer()
 
         return list(stats.computeStatistics(self).items()), 1, False, {}
 
@@ -212,7 +262,7 @@ class EngineEnv(gym.Env):
 
         Gdict = nx.get_node_attributes(self.region, 'LocType')
         for key in Gdict.keys():
-            for statusType in range(6):
+            for statusType in range(h.statusNum):
                 for walker in Gdict[key].walkers[statusType]:
                     self.contact_list[walker] = 0
 
@@ -220,10 +270,22 @@ class EngineEnv(gym.Env):
 
         return statistics
 
-    def render(self, mode='human'):
-        Gdict = nx.get_node_attributes(self.region, 'LocType')
+    def initRendering(self):
+        '''
+        Init the rendering engine
+        '''
+        pygame.init()
 
-        # loc = Gdict[0]
+        self.screen = pygame.display.set_mode((self.maxWidth, self.maxHeight))
+
+        #self.screen = pygame.display.set_mode((self.maxWidth, 600))
+
+        pygame.display.set_caption('City')
+        self.fps = pygame.time.Clock()
+        self.paused = False
+
+    def render(self, mode='human'):
+        
 
         statistics = list(stats.computeStatistics(self).items())
 
@@ -240,7 +302,48 @@ class EngineEnv(gym.Env):
         plt.plot(self.xdata, self.ydata[3], 'ko-')
 
         self.day_counter += 1
-        plt.pause(0.1)
+
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    self.paused = not self.paused
+        
+        if not self.paused:
+            self.screen.fill((0, 0, 0))
+
+            for key in self.gDict:
+                loc = self.gDict[key]
+
+                posx = self.locPos[key][0]
+                posy = self.locPos[key][1]
+
+                if (isinstance(loc, ls.Home)):
+                    color = ls.colors[ls.HOME]
+                elif (isinstance(loc, ls.Workplace)):
+                    color = ls.colors[ls.WORKPLACE]
+                elif (isinstance(loc, ls.GroceriesStore)):
+                    color = ls.colors[ls.GROCERIES_STORE]
+                elif (isinstance(loc, ls.School)):
+                    color = ls.colors[ls.SCHOOL]
+                elif (isinstance(loc, ls.Leisure)):
+                    color = ls.colors[ls.LEISURE]
+
+                pygame.draw.rect(self.screen, color, pygame.Rect(posx, posy, loc.size_x, loc.size_y))
+                
+                for walkerType in range(h.statusNum):
+                    for walker in loc.walkers[walkerType]:
+                        pygame.draw.circle(self.screen, h.colors[walkerType], (posx+walker.x, posy+walker.y), 3, 0)
+
+        pygame.display.update()
+        self.fps.tick(30)
+        
+        plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics', 'infected (disease)', 'recovered', 'dead'))
+        
+        plt.pause(0.5)
 
     def adultHomeProbFcn(self, hour):  # hour-dependent,prob to go/stay home
         if (hour == 12):

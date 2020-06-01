@@ -17,12 +17,12 @@ def genPopulation(region):
             for i in range(0, generatedPeople):
                 w = Walker(Gdict[key].size_x, Gdict[key].size_y, random.randint(1, 100), random.random(), Gdict[key], key)
                 
-                ##############àààà RIGHE AGGIUNTE PER DIVERTIMENTO - da cancellare
+                ################# generate INFECTED (only INCUBATION)
 
                 if (random.random()<0.2):
                     w.setStatus(h.INCUBATION)
                     w.updateVirusTimer(value = random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1]))
                 
-                ##############àààà end
+                ################# end
 
                 Gdict[key].enter(w)

@@ -36,7 +36,7 @@ class Location:
         self.max_capacity = max_capacity
 
         self.walkers = []
-        for i in range(6):
+        for i in range(h.statusNum):
             self.walkers.append([])
 
         # variables for rendering
@@ -89,10 +89,10 @@ class Location:
         # 1) update positions
 
         for _ in range(60):
-            for walkerStatus in range(6):
+            for walkerStatus in range(h.statusNum):
                 for walker in self.walkers[walkerStatus]:
-                    tempx = walker.x + random.randint(-10, 10)
-                    tempy = walker.y + random.randint(-10, 10)
+                    tempx = walker.x + random.randint(-4, 4)
+                    tempy = walker.y + random.randint(-4, 4)
 
                     tempx = (0 if tempx < 0 else (self.size_x if tempx > self.size_x else tempx))
                     tempy = (0 if tempy < 0 else (self.size_y if tempy > self.size_y else tempy))
@@ -105,7 +105,7 @@ class Location:
                 #                if (incubated.getVirusTimer()>0):
                 #                    incubated.updateVirusTimer()
                 #                else:
-                if (not incubated.getVirusTimer()):
+                if (incubated.getVirusTimer()<=0):
                     flag, period = virus.tryDisease(incubated)
                     incubated.updateVirusTimer(value=period)
                     self.walkers[h.INCUBATION].remove(incubated)
@@ -193,7 +193,7 @@ class Location:
 
             font = pygame.font.Font(None, 36)
 
-            for walkerStatus in range(6):
+            for walkerStatus in range(h.statusNum):
                 for walker in self.walkers[walkerStatus]:
                     pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), 5, 0)
                     pygame.draw.circle(self.screen, color[walker.status], (walker.x, walker.y), int(virus.range / 2), 1)
