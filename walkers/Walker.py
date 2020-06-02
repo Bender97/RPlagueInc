@@ -15,6 +15,7 @@ class Walker:
         self.disobedience = disobedience
 
         self.home = home
+
         if self.isChild():
             self.school = dutyPlace
         elif not self.isElder():    # that is, if it's an adult (1 if less)
@@ -60,6 +61,8 @@ class Walker:
                 self.pDisease = 0.45
                 self.pDeath = 0.05
 
+        self.pDisease *= 4
+        self.pDeath *= 4
 
     def move(self, x, y):
         self.x = x

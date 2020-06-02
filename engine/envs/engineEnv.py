@@ -24,6 +24,8 @@ from walkers.Walker import Walker
 
 import walkers.healthState as h
 
+import engine.schedules.schedules as schedules
+
 
 class EngineEnv(gym.Env):
     """
@@ -87,6 +89,13 @@ class EngineEnv(gym.Env):
 
         self.virus = virus
 
+        self.closed_locs = []
+        self.discontent = 0
+        self.daily_discontent = 0
+
+        self.safe_dist = 0
+        self.quarantine = []
+
         self.shiftQueue = []
 
         self.day_counter = 0
@@ -118,27 +127,14 @@ class EngineEnv(gym.Env):
 
     def step(self, action):
 
-        for hour in range(0, 1):  # inizio delle 24 ore
+        for hour in range(0, 24):  # inizio delle 24 ore
 
             for locList in self.locs:   # locList: one for each (HOME, WORKPLACE, SCHOOL, LEISURE, GROCERIES_STORE)
                 for loc in locList:     
                     for walkerType in range(h.statusNum):
                         for w in loc.walkers[walkerType]:
-                            if w.isChild():
-                                if (w.loc == w.home):
-                                    self.goToLoc(w, ls.SCHOOL)
-                                else:
-                                    self.goToLoc(w, ls.HOME)
-                            elif not w.isElder():
-                                if (w.loc == w.home):
-                                    self.goToLoc(w, ls.WORKPLACE)
-                                else:
-                                    self.goToLoc(w, ls.HOME)
-                            else:
-                                if (w.loc == w.home):
-                                    self.goToLoc(w, ls.GROCERIES_STORE)
-                                else:
-                                    self.goToLoc(w, ls.HOME)                                
+                            # apply schedule entrypoint
+                            schedules.applySchedule(self, w, hour)
 
             # commit each shifted in the queue
             self.commitShift()
@@ -147,6 +143,8 @@ class EngineEnv(gym.Env):
             for locList in self.locs:
                 for loc in locList:
                     loc.run1HOUR(self)
+
+            #renderFrame(engine = self, pause = 0.5)
                 
         # for each type of location:
         for locList in self.locs:
@@ -206,7 +204,6 @@ class EngineEnv(gym.Env):
         return statistics
 
     def render(self, mode='human'):
-        
         renderFrame(engine = self, pause = 0.1)
 
     def adultHomeProbFcn(self, hour):  # hour-dependent,prob to go/stay home
@@ -253,5 +250,9 @@ class EngineEnv(gym.Env):
                 target = random.randint(0, len(self.locs[ls.GROCERIES_STORE])-1)
                 walker.exit()
                 walker.enter(self.locs[ls.GROCERIES_STORE][target])
+                #print("Ora sono a" , walker.loc)
+                food = walker.home.family_qty * random.randint(3, 7)
+                walker.home.money -= walker.loc.buyFood(food)
+                walker.home.bringFood(food)
 
         self.shiftQueue = []

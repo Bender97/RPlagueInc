@@ -9,7 +9,7 @@ virus = Virus(range = 3, pInfection = 1 , healthParams = 1, healingParams = 1)
 #create the cartpole environment
 env = gym.make("engine-v0")
 
-observation = env.reset(nHouses = 15)
+observation = env.reset(nHouses = 100)
 
 env.initialize(virus = virus)
 
@@ -18,7 +18,7 @@ for _ in range(1000):
     action = env.action_space.sample() # your agent here (this takes random actions)
     observation, reward, done, info = env.step(action)
 
-    print("R0: " + str(observation[4][0]))
+    #print("R0: " + str(observation[4][0]))
 
     #print(str(reward) + " - " + str(done))
     if (reward==0):

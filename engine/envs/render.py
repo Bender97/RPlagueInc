@@ -39,7 +39,7 @@ def initRender(engine, border=20, padding=20, maxWidth = 500, name_of_window='Ci
                 currentdx += loc.size_x + padding
 
     engine.maxHeight += border
-
+'''
     pygame.init()
 
     engine.myfont = pygame.font.SysFont("monospace", 15)
@@ -48,7 +48,7 @@ def initRender(engine, border=20, padding=20, maxWidth = 500, name_of_window='Ci
 
     pygame.display.set_caption(name_of_window)
     engine.fps = pygame.time.Clock()
-    engine.paused = False
+    engine.paused = False '''
 
 def renderFrame(engine, pause = 0.5):
     statistics = list(stats.computeStatistics(engine).items())
@@ -66,7 +66,9 @@ def renderFrame(engine, pause = 0.5):
     plt.plot(engine.xdata, engine.ydata[3], 'ko-')
 
     engine.day_counter += 1
-
+    plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead'))
+    plt.pause(pause)
+'''
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -96,6 +98,4 @@ def renderFrame(engine, pause = 0.5):
 
     pygame.display.update()
     engine.fps.tick(30)
-    
-    plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead'))
-    plt.pause(pause)
+    '''
