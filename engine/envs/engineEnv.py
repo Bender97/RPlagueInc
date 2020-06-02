@@ -146,38 +146,17 @@ class EngineEnv(gym.Env):
 
             #renderFrame(engine = self, pause = 0.5)
                 
-        # for each type of location:
+        for loc in self.locs[ls.HOME]:
+            loc.eatFood()
+        
         for locList in self.locs:
-            #1) for each HOME:
-            #   - must buyFood
-            #   - death is knocking on terminal infected door
-            for loc in self.locs[ls.HOME]:
-                loc.eatFood()
-                for w in loc.walkers[h.INFECTED]:
-                    w.updateVirusTimer()
-                    if w.getVirusTimer() <= 0:
-                        flag = self.virus.tryDeath(w)  # no need to do anything else, if he doesn't die the counter will be resetted to -1 at the next iteration
-                        w.loc.walkers[h.INFECTED].remove(w)
-                        if (flag):  # disease
-                            #self.walkers[h.DEAD].append(w) 
-                            w.loc = None
-                            self.deads += 1
-                        else:
-                            if w not in self.contact_list:
-                                self.contact_list[w] = 0
-                            w.loc.walkers[h.RECOVERED_FROM_INFECTED].append(w)
-
-            #2) for each loc, update TTLs
             for loc in locList:  # produce the deaths. tryInfection and tryDisease are called inside location file                
                 for w in loc.walkers[h.INCUBATION]:
-                    w.updateVirusTimer()
-                for w in loc.walkers[h.INFECTED]:
-                    if (w.TTL == -1):
-                        w.loc.walkers[h.INFECTED].remove(w)
-                        continue
-                    w.updateVirusTimer()
+                    self.virus.tryDisease(w, self)
                 for w in loc.walkers[h.ASYMPTOMATIC]:
-                    w.updateVirusTimer()
+                    self.virus.tryRecovery(w, self)
+                for w in loc.walkers[h.INFECTED]:
+                    self.virus.tryDeath(w, self)
 
         return list(stats.computeStatistics(self).items()), 1, False, {}
 

@@ -46,50 +46,21 @@ class Location:
 
     # end __init__
 
-    def enter(self, walker):
-        '''
-        Make a new Walker enter the Location
-        Parameters
-        ----------
-        walker : Walker
-            new walker to enter the location
-        '''
-
-        self.walkers[walker.status].append(walker)
-        walker.loc = self
-        print("Sono entrato in",self)
-
-    # end enter #w.loc = w.workPlace
-
-    def exit(self, walker):
-        '''
-        Make a new Walker enter the Location
-        Parameters
-        ----------
-        walker : Walker
-            new walker to enter the location
-        '''
-
-        self.walkers[walker.status].remove(walker)
-        print("Sono uscito da",self)
-    # end exit
-
     def run1HOUR(self, engine):
         '''
         update the context inside the location ( a minute (or second, must decide) of life , for each update call)
         1) update positions
-        2) tryDisease()
-        3) tryDeath()
-        4) tryRecovering()
-        5) tryInfection()
+        2) tryInfection()
         Parameters
         ----------
         virus: Virus
             the virus spreading
         '''
-        # 1) update positions
 
         for _ in range(60):
+            
+            # 1) update positions
+
             for walkerStatus in range(h.statusNum):
                 for walker in self.walkers[walkerStatus]:
                     tempx = walker.x + random.randint(-4, 4)
@@ -101,55 +72,31 @@ class Location:
 
                     walker.move(tempx, tempy)
 
-            # 2) tryDisease()
 
-            for incubated in self.walkers[h.INCUBATION]:
-
-                if (incubated.getVirusTimer()<=0):
-                    flag, period = engine.virus.tryDisease(incubated)
-                    incubated.updateVirusTimer(value=period)
-                    self.walkers[h.INCUBATION].remove(incubated)
-                    if (flag):  # disease
-                        self.walkers[h.INFECTED].append(incubated)
-                        if incubated.infectedBy in engine.contact_list:
-                            engine.contact_list[incubated.infectedBy] += 1
-                        elif incubated.infectedBy != None:
-                            engine.contact_list[incubated.infectedBy] = 1
-                    else:
-                        self.walkers[h.ASYMPTOMATIC].append(incubated)
-
-            for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
-
-                if (asymptomatic.getVirusTimer() <= 0):
-                    self.walkers[h.ASYMPTOMATIC].remove(asymptomatic)
-                    self.walkers[h.RECOVERED_FROM_ASYMPTOMATIC].append(asymptomatic)
-                    asymptomatic.setStatus(h.RECOVERED_FROM_ASYMPTOMATIC)
-
-            # 5) tryInfection()
+            # 2) tryInfection()
             # CHECK FOR EACH WALKER IF IT's CLOSE TO AN INFECTED
-            #   IF SO -> ROLL
+            #   IF SO -> ROLL the DICE
 
             for susceptible in self.walkers[h.SUSCEPTIBLE]:
-                flag = 0
+                
+                flag = 0    # will hold the period of incubation, if infection happens
 
                 for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
                     if (distance(susceptible, asymptomatic) < engine.virus.range):
                         flag = engine.virus.tryInfection(susceptible)
                         if (flag):
-                            #engine.contact_list[asymptomatic] += 1
                             break  # non ha senso fare altri controlli
                 if not flag:
                     for infected in self.walkers[h.INFECTED]:
                         if (distance(susceptible, infected) < engine.virus.range):
                             flag = engine.virus.tryInfection(susceptible)
                             if (flag):
-                                #engine.contact_list[infected] += 1
                                 susceptible.infectedBy = infected
                                 break  # non ha senso fare altri controlli
                 if flag:
                     susceptible.updateVirusTimer(value=flag)
-                    self.walkers[h.INCUBATION].append(susceptible)
                     self.walkers[h.SUSCEPTIBLE].remove(susceptible)
+                    self.walkers[h.INCUBATION].append(susceptible)
 
     # end update
 
