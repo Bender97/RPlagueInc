@@ -74,7 +74,7 @@ class Location:
         print("Sono uscito da",self)
     # end exit
 
-    def run1HOUR(self, virus):
+    def run1HOUR(self, engine):
         '''
         update the context inside the location ( a minute (or second, must decide) of life , for each update call)
         1) update positions
@@ -118,7 +118,7 @@ class Location:
                 #                    incubated.updateVirusTimer()
                 #                else:
                 if (incubated.getVirusTimer()<=0):
-                    flag, period = virus.tryDisease(incubated)
+                    flag, period = engine.virus.tryDisease(incubated)
                     incubated.updateVirusTimer(value=period)
                     self.walkers[h.INCUBATION].remove(incubated)
                     if (flag):  # disease
@@ -158,15 +158,17 @@ class Location:
                 flag = 0
 
                 for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
-                    if (distance(susceptible, asymptomatic) < virus.range):
-                        flag = virus.tryInfection(susceptible)
+                    if (distance(susceptible, asymptomatic) < engine.virus.range):
+                        flag = engine.virus.tryInfection(susceptible)
                         if (flag):
+                            engine.contact_list[asymptomatic] += 1
                             break  # non ha senso fare altri controlli
                 if not flag:
                     for infected in self.walkers[h.INFECTED]:
-                        if (distance(susceptible, infected) < virus.range):
-                            flag = virus.tryInfection(susceptible)
+                        if (distance(susceptible, infected) < engine.virus.range):
+                            flag = engine.virus.tryInfection(susceptible)
                             if (flag):
+                                engine.contact_list[infected] += 1
                                 break  # non ha senso fare altri controlli
                 if flag:
                     susceptible.updateVirusTimer(value=flag)

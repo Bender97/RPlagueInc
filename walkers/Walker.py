@@ -5,7 +5,7 @@ import walkers.healthState as h
 
 class Walker:
 
-    def __init__(self, width, height, age, disobedience, home, school, workPlace):
+    def __init__(self, width, height, age, disobedience, home, dutyPlace):
         self.status = h.SUSCEPTIBLE
         self.x = random.randint(0,width)
         self.y = random.randint(0,height)
@@ -15,8 +15,10 @@ class Walker:
         self.disobedience = disobedience
 
         self.home = home
-        self.school = school
-        self.workPlace = workPlace
+        if self.isChild():
+            self.school = dutyPlace
+        elif not self.isElder():    # that is, if it's an adult (1 if less)
+            self.workPlace = dutyPlace
 
         self.loc = self.home
         
@@ -105,7 +107,7 @@ class Walker:
         return self.healthLevel <= h.badHealth_level
 
     def exit(self):
-        
+
         self.loc.walkers[self.status].remove(self)
         self.loc = None
 

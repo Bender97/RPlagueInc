@@ -12,6 +12,14 @@ GROCERIES_STORE = 2
 SCHOOL = 3
 LEISURE = 4
 
+labels = (
+    'home',
+    'work',
+    'grocery',
+    'school',
+    'leisure'
+    )
+
 colors = (
     (255,182,193), # HOME pink
     (220,220,220), # WORKPLACE gainsboro (era bello il nome, è un grigio chiaro)
@@ -19,6 +27,8 @@ colors = (
     (231, 251, 231), # SCHOOL lightgreen
     (216,191,216), # LEISURE lightpurple
     )
+
+
 
 # Home default parameters
 HOME_X = 20 # HOME_X = 20

@@ -17,13 +17,11 @@ import engine.regiongen as reggen
 from collections import defaultdict
 import engine.statistics as stats
 
-import pygame
+from engine.envs.render import *
 
 import engine.virus as vir
 from walkers.Walker import Walker
 
-import time
-import matplotlib.pyplot as plt
 import walkers.healthState as h
 
 
@@ -111,42 +109,9 @@ class EngineEnv(gym.Env):
 
         # calculate position on screen for each location
         self.locPos = [[], [], [], [], []]
-        
-        border = 10
-        padding = 10
 
-        self.maxWidth = 500         # static
-        self.maxHeight = border     # dinamically updated
 
-        # these two indicates the next position of a location
-        currentdx = border
-        currentdy = border
-
-        for locs in self.locs:
-            for loc in locs:
-
-                #1) check the current location can fit the window (accounting also the border value)
-
-                if (currentdx + loc.size_x + border < self.maxWidth):
-
-                    self.locPos[loc.type].append(pygame.Rect(currentdx, currentdy, loc.size_x, loc.size_y))
-                    # prepare for next 
-                    currentdx += loc.size_x + padding
-
-                    # check for maxHeight (for next line height)
-                    tempy = currentdy + loc.size_y
-                    if (tempy > self.maxHeight):
-                        self.maxHeight = tempy
-
-                else:
-                    # go to next line
-                    currentdy = self.maxHeight + padding
-                    currentdx = border
-                    self.locPos[loc.type].append(pygame.Rect(currentdx, currentdy, loc.size_x, loc.size_y))
-
-                    currentdx += loc.size_x + padding
-
-        self.maxHeight += border
+        initRender(self, border=20, padding = 20, name_of_window='Region')
 
     # end __init__
     ##################################################################
@@ -159,77 +124,21 @@ class EngineEnv(gym.Env):
                 for loc in locList:     
                     for walkerType in range(h.statusNum):
                         for w in loc.walkers[walkerType]:
-                            # Adult Schedule
-                            if w.isAdult():
-                                if (random.random() < self.adultHomeProbFcn(hour)) or w.wentForGroceries:
-                                    self.goToLoc(w, ls.HOME)  # if already at home, nothing happens
-                                    w.wentForGroceries = False
+                            if w.isChild():
+                                if (w.loc == w.home):
+                                    self.goToLoc(w, ls.SCHOOL)
                                 else:
-                                    atHome = (w.home == w.loc)
-                                    if atHome:
-                                        if (w.home.needFood() and (
-                                                8 <= hour <= 10 or 17 <= hour <= 19)) and random.random() < (
-                                                1 - w.disobedience):
-                                            self.goToLoc(w, ls.GROCERIES_STORE)
-                                            w.wentForGroceries = True
-                                            food = w.home.family_qty * random.randint(3, 7)
-                                            w.home.money -= w.loc.buyFood(food)
-                                            w.home.bringFood(food)
-                                            break
-                                    activityLoc = np.random.choice([ls.WORKPLACE, ls.LEISURE], p=[0.75, 0.25])
-                                    self.goToLoc(w, activityLoc)
-                            # Child
-                            elif w.isChild():
-                                if not (7 <= hour <= 19) or w.wentForGroceries:
                                     self.goToLoc(w, ls.HOME)
-                                    w.wentForGroceries = False
-                                elif (7 <= hour <= 8):
-                                    if w.loc == w.home:
-                                        if random.random() < 0.7:
-                                            self.goToLoc(w, ls.SCHOOL)
-                                elif (hour == 9):
-                                    if w.loc == w.home:
-                                        self.goToLoc(w, ls.SCHOOL)
-                                elif (13 <= hour <= 14):
-                                    if w.loc != w.home:
-                                        if random.random() < 0.5:
-                                            self.goToLoc(w, ls.SCHOOL)
-                                elif (hour == 15):
-                                    if w.loc != w.home:
-                                        self.goToLoc(w, ls.HOME)
-                                elif (16 <= hour <= 19):
-                                    if w.loc == w.home:
-                                        if w.home.needFood() and random.random() < (1 - w.disobedience):
-                                            self.goToLoc(w, ls.GROCERIES_STORE)
-                                            w.wentForGroceries = True
-                                            food = w.home.family_qty * random.randint(3, 7)
-                                            w.home.money -= w.loc.buyFood(food)
-                                            w.home.bringFood(food)
-                                            break
-                                        if random.random() < 0.6:
-                                            self.goToLoc(w, ls.LEISURE)  # go out and play a little
-                                    else:
-                                        if random.random() < 0.4:
-                                            self.goToLoc(w, ls.HOME)
-                            # Elder
+                            elif not w.isElder():
+                                if (w.loc == w.home):
+                                    self.goToLoc(w, ls.WORKPLACE)
+                                else:
+                                    self.goToLoc(w, ls.HOME)
                             else:
-                                if not (7 <= hour <= 19) or w.wentForGroceries:
-                                    self.goToLoc(w, ls.HOME)
-                                    w.wentForGroceries = False
+                                if (w.loc == w.home):
+                                    self.goToLoc(w, ls.GROCERIES_STORE)
                                 else:
-                                    if w.loc == w.home:
-                                        if w.home.needFood() and random.random() < (1 - w.disobedience):
-                                            self.goToLoc(w, ls.GROCERIES_STORE)
-                                            w.wentForGroceries = True
-                                            food = w.home.family_qty * random.randint(3, 7)
-                                            w.home.money -= w.loc.buyFood(food)
-                                            w.home.bringFood(food)
-                                            break
-                                        if random.random() < 0.4:
-                                            self.goToLoc(w, ls.LEISURE)
-                                    else:
-                                        if random.random() < 0.6:
-                                            self.goToLoc(w, ls.HOME)
+                                    self.goToLoc(w, ls.HOME)                                
 
             # commit each shifted in the queue
             self.commitShift()
@@ -237,7 +146,7 @@ class EngineEnv(gym.Env):
             # shift committed, it's time to run the hour
             for locList in self.locs:
                 for loc in locList:
-                    loc.run1HOUR(self.virus)
+                    loc.run1HOUR(self)
                 
         # for each type of location:
         for locList in self.locs:
@@ -263,7 +172,6 @@ class EngineEnv(gym.Env):
                 for w in loc.walkers[h.INCUBATION]:
                     w.updateVirusTimer()
                 for w in loc.walkers[h.INFECTED]:
-                    print(w.TTL)
                     if (w.TTL == -1):
                         w.loc.walkers[h.INFECTED].remove(w)
                         continue
@@ -297,68 +205,9 @@ class EngineEnv(gym.Env):
 
         return statistics
 
-    def initRendering(self):
-        '''
-        Init the rendering engine
-        '''
-        pygame.init()
-
-        self.screen = pygame.display.set_mode((self.maxWidth, self.maxHeight))
-
-        #self.screen = pygame.display.set_mode((self.maxWidth, 600))
-
-        pygame.display.set_caption('City')
-        self.fps = pygame.time.Clock()
-        self.paused = False
-
     def render(self, mode='human'):
         
-        statistics = list(stats.computeStatistics(self).items())
-
-        self.xdata.append(self.day_counter)
-
-        self.ydata[0].append(statistics[0][1])
-        self.ydata[1].append(statistics[1][1])
-        self.ydata[2].append(statistics[2][1])
-        self.ydata[3].append(statistics[3][1])
-
-        plt.plot(self.xdata, self.ydata[0], 'bo-')
-        plt.plot(self.xdata, self.ydata[1], 'ro-')
-        plt.plot(self.xdata, self.ydata[2], 'go-')
-        plt.plot(self.xdata, self.ydata[3], 'ko-')
-
-        self.day_counter += 1
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_SPACE:
-                    self.paused = not self.paused
-        
-        if not self.paused:
-            self.screen.fill((0, 0, 0))
-
-            for locs in self.locs:
-                idx = 0
-                for loc in locs:
-
-                    posx = self.locPos[loc.type][idx][0]
-                    posy = self.locPos[loc.type][idx][1]
-
-                    pygame.draw.rect(self.screen, ls.colors[loc.type], self.locPos[loc.type][idx])
-                    
-                    for walkerType in range(h.statusNum):
-                        for walker in loc.walkers[walkerType]:
-                            pygame.draw.circle(self.screen, h.colors[walkerType], (posx+walker.x, posy+walker.y), 3, 0)
-                    idx += 1
-
-        pygame.display.update()
-        self.fps.tick(30)
-        
-        plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead'))
-        plt.pause(0.1)
+        renderFrame(engine = self, pause = 0.1)
 
     def adultHomeProbFcn(self, hour):  # hour-dependent,prob to go/stay home
         if (hour == 12):

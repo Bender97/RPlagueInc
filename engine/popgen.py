@@ -5,7 +5,9 @@ import structures.locations as ls
 
 def genPopulation(env):
 
-    num_people = 0
+    num_child = -1
+    num_adult = -1
+    num_elder = -1
 
     for home in env.locs[ls.HOME]:
 
@@ -14,15 +16,26 @@ def genPopulation(env):
 
         for _ in range(generatedPeople):
 
+            age = random.randint(1, 100)
+
+            if age>h.old_age:
+                num_elder += 1
+                dutyPlace = None
+            elif age < h.young_age:
+                num_child += 1
+                dutyPlace = env.locs[ls.SCHOOL][num_child % len(env.locs[ls.SCHOOL])]
+            else:
+                num_adult += 1
+                dutyPlace = env.locs[ls.WORKPLACE][num_adult % len(env.locs[ls.WORKPLACE])]
+
             w = Walker( home.size_x, 
                         home.size_y, 
-                        random.randint(1, 100), 
+                        age, 
                         random.random(), 
                         home, 
-                        env.locs[ls.SCHOOL][num_people % len(env.locs[ls.SCHOOL])],
-                        env.locs[ls.WORKPLACE][num_people % len(env.locs[ls.WORKPLACE])]
+                        dutyPlace
                         )
-            
+
             ################# generate INFECTED (only INCUBATION)
 
             if (random.random()<0.2):
@@ -33,6 +46,6 @@ def genPopulation(env):
 
             w.enter(w.home)
 
-            num_people += 1
 
-    print("in tutto " + str(num_people) + " persone")
+
+    print(str(num_child + num_adult + num_elder) + " people have been generated")

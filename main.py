@@ -12,14 +12,15 @@ env = gym.make("engine-v0")
 observation = env.reset(nHouses = 15)
 
 env.initialize(virus = virus)
-env.initRendering()
 
 for _ in range(1000):
     env.render()
     action = env.action_space.sample() # your agent here (this takes random actions)
     observation, reward, done, info = env.step(action)
 
-    print(str(reward) + " - " + str(done))
+    print("R0: " + str(observation[4][0]))
+
+    #print(str(reward) + " - " + str(done))
     if (reward==0):
         input()
 
