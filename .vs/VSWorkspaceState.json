@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\engine",
+    "\\engine\\envs",
+    "\\engine\\schedules",
+    "\\structures",
+    "\\walkers"
+  ],
+  "SelectedNode": "\\engine\\envs\\engineEnv.py",
+  "PreviewInSolutionExplorer": false
+}

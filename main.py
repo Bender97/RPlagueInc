@@ -1,31 +1,33 @@
-import gym
-import engine.envs.engineEnv
-import time
-from engine.virus import Virus
+if __name__ == '__main__':
 
-virus = Virus(range = 3, pInfection = 1 , healthParams = 1, healingParams = 1)
+    import gym
+    import engine.envs.engineEnv
+    import time
+    from engine.virus import Virus
+
+    virus = Virus(range = 3, pInfection = 1 , healthParams = 1, healingParams = 1)
 
 
-#create the cartpole environment
-env = gym.make("engine-v0")
+    #create the cartpole environment
+    env = gym.make("engine-v0")
 
-observation = env.reset(nHouses = 15)
+    observation = env.reset(nHouses = 15)
 
-env.initialize(virus = virus)
+    env.initialize(virus = virus)
 
-for _ in range(1000):
-    env.render()
-    action = env.action_space.sample() # your agent here (this takes random actions)
-    observation, reward, done, info = env.step(action)
+    for _ in range(1000):
+        env.render()
+        action = env.action_space.sample() # your agent here (this takes random actions)
+        observation, reward, done, info = env.step(action)
     
-    print("inf: " + str(observation[1][1]))
-    print("R0: " + str(observation[4][1]))
+        print("inf: " + str(observation[1][1]))
+        print("R0: " + str(observation[4][1]))
 
-    #print(str(reward) + " - " + str(done))
-    if (reward==0):
-        input()
+        #print(str(reward) + " - " + str(done))
+        if (reward==0):
+            input()
 
-    #time.sleep(0.1)
-    if done:
-        observation = env.reset()
-env.close()
+        #time.sleep(0.1)
+        if done:
+            observation = env.reset()
+    env.close()

@@ -103,6 +103,11 @@ SCHEDULES = {
     }
 
 
+def applyScheduleParallel(args):
+    engine, walker, hour = args
+    applySchedule(engine, walker, hour)
+# end applyScheduleParallel
+
 def applySchedule(engine, walker, hour):
     age = 0
     if walker.isChild():

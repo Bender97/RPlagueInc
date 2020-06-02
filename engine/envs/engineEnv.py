@@ -11,6 +11,8 @@ import random
 import numpy as np
 import structures.locations as ls
 
+import multiprocessing as mp
+
 import structures.location as l
 import engine.popgen as popgen
 import engine.regiongen as reggen
@@ -127,14 +129,12 @@ class EngineEnv(gym.Env):
 
     def step(self, action):
 
+        pool = mp.Pool(mp.cpu_count())
+
         for hour in range(0, 24):  # inizio delle 24 ore
 
-            for locList in self.locs:   # locList: one for each (HOME, WORKPLACE, SCHOOL, LEISURE, GROCERIES_STORE)
-                for loc in locList:     
-                    for walkerType in range(h.statusNum):
-                        for w in loc.walkers[walkerType]:
-                            # apply schedule entrypoint
-                            schedules.applySchedule(self, w, hour)
+            for w in self.walker_list:   # locList: one for each (HOME, WORKPLACE, SCHOOL, LEISURE, GROCERIES_STORE)
+                pool.map(schedules.applyScheduleParallel, [[self, w, hour] for w in self.walker_list])
 
             # commit each shifted in the queue
             self.commitShift()
@@ -146,6 +146,8 @@ class EngineEnv(gym.Env):
 
             #renderFrame(engine = self, pause = 0.5)
                 
+        pool.close()
+
         for loc in self.locs[ls.HOME]:
             loc.eatFood()
         
@@ -162,11 +164,12 @@ class EngineEnv(gym.Env):
 
     def reset(self, nHouses):
         self.nHouses = nHouses
+
+        self.walker_list = []
         
         reggen.regionGen(self)
 
         popgen.genPopulation(self)
-
 
         self.steps_done = 0
 
