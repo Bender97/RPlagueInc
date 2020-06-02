@@ -61,7 +61,7 @@ class Walker:
         self.y = y
 
     def isInA(self, engine, type):
-        return isinstace(engine.gDict[self.loc], ls.Leisure)
+        return isinstace(engine.gDict[self.loc], type)
 
     # updates the status with a 1 day time step.Has to be called from engine.
     #Has to work with tryDeath, when the counter reaches 0.
