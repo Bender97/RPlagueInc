@@ -161,14 +161,20 @@ class Location:
                     if (distance(susceptible, asymptomatic) < engine.virus.range):
                         flag = engine.virus.tryInfection(susceptible)
                         if (flag):
-                            engine.contact_list[asymptomatic] += 1
+                            if asymptomatic in engine.contact_list:
+                                engine.contact_list[asymptomatic] += 1
+                            else:
+                                engine.contact_list[asymptomatic] = 1
                             break  # non ha senso fare altri controlli
                 if not flag:
                     for infected in self.walkers[h.INFECTED]:
                         if (distance(susceptible, infected) < engine.virus.range):
                             flag = engine.virus.tryInfection(susceptible)
                             if (flag):
-                                engine.contact_list[infected] += 1
+                                if infected in engine.contact_list:
+                                    engine.contact_list[infected] += 1
+                                else:
+                                    engine.contact_list[infected] = 1
                                 break  # non ha senso fare altri controlli
                 if flag:
                     susceptible.updateVirusTimer(value=flag)

@@ -193,11 +193,7 @@ class EngineEnv(gym.Env):
 
         self.contact_list = {}
 
-        for locList in self.locs:
-            for loc in locList:
-                for statusType in range(h.statusNum):
-                    for walker in loc.walkers[statusType]:
-                        self.contact_list[walker] = 0
+        
 
         statistics = list(stats.computeStatistics(self).items())
 

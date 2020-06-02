@@ -14,11 +14,12 @@ observation = env.reset(nHouses = 100)
 env.initialize(virus = virus)
 
 for _ in range(1000):
-    env.render()
+    #env.render()
     action = env.action_space.sample() # your agent here (this takes random actions)
     observation, reward, done, info = env.step(action)
-
-    #print("R0: " + str(observation[4][0]))
+    
+    print("inf: " + str(observation[1][1]))
+    print("R0: " + str(observation[4][1]))
 
     #print(str(reward) + " - " + str(done))
     if (reward==0):
