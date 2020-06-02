@@ -41,7 +41,7 @@ def computeStatistics(engine):
         for loc in locList:
             statistics[S] += len(loc.walkers[h.SUSCEPTIBLE]) + len(loc.walkers[h.ASYMPTOMATIC]) + len(loc.walkers[h.INCUBATION])
             statistics[I] += len(loc.walkers[h.INFECTED])
-            statistics[R] += len(loc.walkers[h.RECOVERED])
+            statistics[R] += len(loc.walkers[h.RECOVERED_FROM_INFECTED])
             if isinstance(loc, Home):
                 money_accum += loc.money
                 n_homes += 1
@@ -56,6 +56,7 @@ def computeStatistics(engine):
 
     length = len(engine.contact_list)
     if (length):
+        #print(engine.contact_list)
         statistics[R0] = secondary_inf_accum / len(engine.contact_list)
 
 

@@ -41,7 +41,6 @@ def genPopulation(env):
             if (random.random()<0.2):
                 w.setStatus(h.INCUBATION)
                 w.updateVirusTimer(value = random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1]))
-            
             ################# end
 
             w.enter(w.home)

@@ -95,18 +95,8 @@ class Location:
                     tempx = walker.x + random.randint(-4, 4)
                     tempy = walker.y + random.randint(-4, 4)
                     
-                    #tempx = (0 if tempx < 0 else (self.size_x if tempx > self.size_x else tempx))
-                    #tempy = (0 if tempy < 0 else (self.size_y if tempy > self.size_y else tempy))
-
-                    if (tempx<0):
-                        tempx = 0
-                    elif tempx>self.size_x:
-                        tempx = self.size_x
-                    
-                    if (tempy<0):
-                        tempy = 0
-                    elif tempy>self.size_y:
-                        tempy = self.size_y
+                    tempx = (0 if tempx < 0 else (self.size_x if tempx > self.size_x else tempx))
+                    tempy = (0 if tempy < 0 else (self.size_y if tempy > self.size_y else tempy))
 
 
                     walker.move(tempx, tempy)
@@ -114,41 +104,26 @@ class Location:
             # 2) tryDisease()
 
             for incubated in self.walkers[h.INCUBATION]:
-                #                if (incubated.getVirusTimer()>0):
-                #                    incubated.updateVirusTimer()
-                #                else:
+
                 if (incubated.getVirusTimer()<=0):
                     flag, period = engine.virus.tryDisease(incubated)
                     incubated.updateVirusTimer(value=period)
                     self.walkers[h.INCUBATION].remove(incubated)
                     if (flag):  # disease
                         self.walkers[h.INFECTED].append(incubated)
+                        if incubated.infectedBy in engine.contact_list:
+                            engine.contact_list[incubated.infectedBy] += 1
+                        elif incubated.infectedBy != None:
+                            engine.contact_list[incubated.infectedBy] = 1
                     else:
                         self.walkers[h.ASYMPTOMATIC].append(incubated)
 
-            # 3) tryDeath()
-            '''    
-            for infected in self.walkers[h.INFECTED]:
-                if (infected.getVirusTimer()>0):
-                    infected.updateVirusTimer()
-                else:
-                    flag = virus.tryDeath(infected)
-                    self.walkers[h.INFECTED].remove(infected)
-                    if (flag):
-                        self.walkers[h.DEAD].append(infected)
-                        print("+1 DEAD")
-                    else:
-                        self.walkers[h.RECOVERED].append(infected)
-            '''
-            # 4) tryRecovering()
-
             for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
-                #                if (asymptomatic.getVirusTimer()>0):
-                #                    asymptomatic.updateVirusTimer()
+
                 if (asymptomatic.getVirusTimer() <= 0):
                     self.walkers[h.ASYMPTOMATIC].remove(asymptomatic)
-                    self.walkers[h.RECOVERED].append(asymptomatic)
-                    asymptomatic.setStatus(h.RECOVERED)
+                    self.walkers[h.RECOVERED_FROM_ASYMPTOMATIC].append(asymptomatic)
+                    asymptomatic.setStatus(h.RECOVERED_FROM_ASYMPTOMATIC)
 
             # 5) tryInfection()
             # CHECK FOR EACH WALKER IF IT's CLOSE TO AN INFECTED
@@ -161,20 +136,15 @@ class Location:
                     if (distance(susceptible, asymptomatic) < engine.virus.range):
                         flag = engine.virus.tryInfection(susceptible)
                         if (flag):
-                            if asymptomatic in engine.contact_list:
-                                engine.contact_list[asymptomatic] += 1
-                            else:
-                                engine.contact_list[asymptomatic] = 1
+                            #engine.contact_list[asymptomatic] += 1
                             break  # non ha senso fare altri controlli
                 if not flag:
                     for infected in self.walkers[h.INFECTED]:
                         if (distance(susceptible, infected) < engine.virus.range):
                             flag = engine.virus.tryInfection(susceptible)
                             if (flag):
-                                if infected in engine.contact_list:
-                                    engine.contact_list[infected] += 1
-                                else:
-                                    engine.contact_list[infected] = 1
+                                #engine.contact_list[infected] += 1
+                                susceptible.infectedBy = infected
                                 break  # non ha senso fare altri controlli
                 if flag:
                     susceptible.updateVirusTimer(value=flag)

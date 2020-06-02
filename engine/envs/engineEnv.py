@@ -163,7 +163,9 @@ class EngineEnv(gym.Env):
                             w.loc = None
                             self.deads += 1
                         else:
-                            w.loc.walkers[h.RECOVERED].append(w)
+                            if w not in self.contact_list:
+                                self.contact_list[w] = 0
+                            w.loc.walkers[h.RECOVERED_FROM_INFECTED].append(w)
 
             #2) for each loc, update TTLs
             for loc in locList:  # produce the deaths. tryInfection and tryDisease are called inside location file                

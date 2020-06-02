@@ -25,6 +25,8 @@ class Walker:
         
         # A coundown for disease
         self.TTL = -1
+        self.infectedBy = None
+
         self.wentForGroceries=False
 
 

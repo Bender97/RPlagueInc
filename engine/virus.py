@@ -36,7 +36,7 @@ class Virus:
             walker.setStatus(h.DEAD)
             return 1
         else:
-            walker.setStatus(h.RECOVERED)
+            walker.setStatus(h.RECOVERED_FROM_INFECTED)
             return 0
     # commented FOR FURTHER WORKS
     #def computeDmg(self,walkerData): #walkerData contiene un vettore a cui verrà applicato il prodotto scalare con healthParams
