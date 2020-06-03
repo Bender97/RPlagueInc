@@ -66,6 +66,7 @@ class Virus:
                 walker.setStatus(h.DEAD)
                 walker.loc = None
                 engine.deads += 1
+                engine.walker_list.remove(walker)
                 return 1
             else:
                 walker.setStatus(h.RECOVERED_FROM_INFECTED)

@@ -9,7 +9,7 @@ import os
 def initPyGame(engine, border=20, padding=20, maxWidth = 500, name_of_window='City'):
 
     pygame.init()
-    os.environ['SDL_VIDEO_WINDOW_POS'] = '%i,%i' % (700,50)
+    #os.environ['SDL_VIDEO_WINDOW_POS'] = '%i,%i' % (700,50)
 
     engine.myfont = pygame.font.SysFont("monospace", 15)
 
@@ -59,8 +59,8 @@ def initPlt(engine):
     engine.day_counter = 0
     engine.xdata = []
     engine.ydata = [[], [], [], []]
-    this = plt.get_current_fig_manager()
-    this.canvas.manager.window.move(0,0)
+    #this = plt.get_current_fig_manager()
+    #this.canvas.manager.window.move(0,0)
 
     plt.xlabel('number of days')
     plt.ylabel('people')
@@ -102,7 +102,7 @@ def renderFramePyGame(engine):
             
             for walkerType in range(h.statusNum):
                 for walker in loc.walkers[walkerType]:
-                    pygame.draw.circle(engine.screen, h.colors[walkerType], (posx+walker.x, posy+walker.y), 3, 0)
+                    pygame.draw.circle(engine.screen, h.colors[walkerType], (posx+int(walker.x), posy+int(walker.y)), 3, 0)
             idx += 1
 
     pygame.display.update()

@@ -43,6 +43,7 @@ def genPopulation(env):
                 w.updateVirusTimer(value = random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1]))
             ################# end
 
+            env.walker_list.append(w)
             w.enter(w.home)
 
 

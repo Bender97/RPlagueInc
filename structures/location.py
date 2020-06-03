@@ -3,6 +3,10 @@ import sys
 import random
 import math
 
+import numpy as np
+
+import time
+
 from walkers.Walker import Walker
 import walkers.healthState as h
 
@@ -46,60 +50,6 @@ class Location:
 
     # end __init__
 
-    def run1HOUR(self, engine):
-        '''
-        update the context inside the location ( a minute (or second, must decide) of life , for each update call)
-        1) update positions
-        2) tryInfection()
-        Parameters
-        ----------
-        virus: Virus
-            the virus spreading
-        '''
-
-        for _ in range(60):
-            
-            # 1) update positions
-
-            for walkerStatus in range(h.statusNum):
-                for walker in self.walkers[walkerStatus]:
-                    tempx = walker.x + random.randint(-4, 4)
-                    tempy = walker.y + random.randint(-4, 4)
-                    
-                    tempx = (0 if tempx < 0 else (self.size_x if tempx > self.size_x else tempx))
-                    tempy = (0 if tempy < 0 else (self.size_y if tempy > self.size_y else tempy))
-
-
-                    walker.move(tempx, tempy)
-
-
-            # 2) tryInfection()
-            # CHECK FOR EACH WALKER IF IT's CLOSE TO AN INFECTED
-            #   IF SO -> ROLL the DICE
-
-            for susceptible in self.walkers[h.SUSCEPTIBLE]:
-                
-                flag = 0    # will hold the period of incubation, if infection happens
-
-                for asymptomatic in self.walkers[h.ASYMPTOMATIC]:
-                    if (distance(susceptible, asymptomatic) < engine.virus.range):
-                        flag = engine.virus.tryInfection(susceptible)
-                        if (flag):
-                            break  # non ha senso fare altri controlli
-                if not flag:
-                    for infected in self.walkers[h.INFECTED]:
-                        if (distance(susceptible, infected) < engine.virus.range):
-                            flag = engine.virus.tryInfection(susceptible)
-                            if (flag):
-                                susceptible.infectedBy = infected
-                                break  # non ha senso fare altri controlli
-                if flag:
-                    susceptible.updateVirusTimer(value=flag)
-                    self.walkers[h.SUSCEPTIBLE].remove(susceptible)
-                    self.walkers[h.INCUBATION].append(susceptible)
-
-    # end update
-
     def initRendering(self):
         '''
         Init the rendering engine
@@ -140,6 +90,70 @@ class Location:
 
 
 # end class Location
+
+def run1HOUR(engine):
+    '''
+    update the context inside the location ( a minute (or second, must decide) of life , for each update call)
+    1) update positions
+    2) tryInfection()
+    Parameters
+    ----------
+    virus: Virus
+        the virus spreading
+    '''
+
+    for _ in range(60):
+            
+        # 1) update positions
+
+        coord_array = np.array([[w.x, w.y] for w in engine.walker_list], dtype = float)
+        sizes = np.array([[w.loc.size_x - 1, w.loc.size_y - 1] for w in engine.walker_list])
+
+        diameter = 8
+    
+        # compute a random walk
+        walks = (np.random.random((len(engine.walker_list), 2)) - 0.5) * diameter
+
+        # make the walk
+        coord_array += walks
+
+        # limit the walk inside the locations
+        np.clip(coord_array, 0, sizes, out = coord_array)
+
+        i = 0
+        for w in engine.walker_list:
+            w.move(coord_array[i][0], coord_array[i][1])
+            i += 1
+
+
+        # 2) tryInfection()
+        # CHECK FOR EACH WALKER IF IT's CLOSE TO AN INFECTED
+        #   IF SO -> ROLL the DICE
+
+        for locList in engine.locs:
+            for loc in locList:
+
+                for susceptible in loc.walkers[h.SUSCEPTIBLE]:
+                    flag = 0    # will hold the period of incubation, if infection happens
+
+                    for asymptomatic in loc.walkers[h.ASYMPTOMATIC]:
+                        if (distance(susceptible, asymptomatic) < engine.virus.range):
+                            flag = engine.virus.tryInfection(susceptible)
+                            if (flag):
+                                break  # non ha senso fare altri controlli
+                    if not flag:
+                        for infected in loc.walkers[h.INFECTED]:
+                            if (distance(susceptible, infected) < engine.virus.range):
+                                flag = engine.virus.tryInfection(susceptible)
+                                if (flag):
+                                    susceptible.infectedBy = infected
+                                    break  # non ha senso fare altri controlli
+                    if flag:
+                        susceptible.updateVirusTimer(value=flag)
+                        loc.walkers[h.SUSCEPTIBLE].remove(susceptible)
+                        loc.walkers[h.INCUBATION].append(susceptible)
+
+# end update
 
 
 def distance(walker1, walker2):

@@ -11,6 +11,8 @@ import random
 import numpy as np
 import structures.locations as ls
 
+import time
+
 import structures.location as l
 import engine.popgen as popgen
 import engine.regiongen as reggen
@@ -111,29 +113,47 @@ class EngineEnv(gym.Env):
 
     def step(self, action):
 
+        start_step = time.time()
+
+        start_hours = time.time()
+
         for hour in range(0, 24):  # inizio delle 24 ore
             print("hour: " + str(hour))
-            for locList in self.locs:   # locList: one for each (HOME, WORKPLACE, SCHOOL, LEISURE, GROCERIES_STORE)
-                for loc in locList:     
-                    for walkerType in range(h.statusNum):
-                        for w in loc.walkers[walkerType]:
-                            # apply schedule entrypoint
-                            schedules.applySchedule(self, w, hour)
 
+            start_hour = time.time()
+
+            for w in self.walker_list:
+                # apply schedule entrypoint
+                schedules.applySchedule(self, w, hour)
+
+
+            end_hour = time.time()
+            print("time elapsed for hour is: " + str(end_hour - start_hour))
+
+            start_shift = time.time()
             # commit each shifted in the queue
             self.commitShift()
+            end_shift = time.time()
+            print("time elapsed for shift is: " + str(end_shift - start_shift))
 
+            start_loc = time.time()
             # shift committed, it's time to run the hour
-            for locList in self.locs:
-                for loc in locList:
-                    loc.run1HOUR(self)
+            l.run1HOUR(self)
+
+            end_loc = time.time()
+            print("time elapsed for location is: " + str(end_loc - start_loc))
 
             #renderFramePyGame(engine = self)
             #time.sleep(0.05)
                 
+        end_hours = time.time()
+        print("time elapsed for day is:" + str(end_hours - start_hours))
+
         for loc in self.locs[ls.HOME]:
             loc.eatFood()
         
+        start_inf = time.time()
+
         for locList in self.locs:
             for loc in locList:  # produce the deaths. tryInfection and tryDisease are called inside location file                
                 for w in loc.walkers[h.INCUBATION]:
@@ -143,10 +163,18 @@ class EngineEnv(gym.Env):
                 for w in loc.walkers[h.INFECTED]:
                     self.virus.tryDeath(w, self)
 
+        end_inf = time.time()
+        print("time elapsed for infection is:" + str(end_inf - start_inf))
+
+        end_step = time.time()
+        print("time elapsed for step is: " + str(end_step - start_step))
+
         return list(stats.computeStatistics(self).items()), 1, False, {}
 
     def reset(self, nHouses):
         self.nHouses = nHouses
+
+        self.walker_list = []
         
         reggen.regionGen(self)
 
