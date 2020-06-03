@@ -1,5 +1,5 @@
 ﻿from structures.location import Location
-from structures.locations import Home
+import structures.locations as ls
 import walkers.healthState as h
 import networkx as nx
 
@@ -39,10 +39,10 @@ def computeStatistics(engine):
 
     for locList in engine.locs:
         for loc in locList:
-            statistics[S] += len(loc.walkers[h.SUSCEPTIBLE]) + len(loc.walkers[h.ASYMPTOMATIC]) + len(loc.walkers[h.INCUBATION])
+            statistics[S] += len(loc.walkers[h.SUSCEPTIBLE]) + len(loc.walkers[h.ASYMPTOMATIC]) + len(loc.walkers[h.INCUBATION]) + len(loc.walkers[h.RECOVERED_FROM_ASYMPTOMATIC])
             statistics[I] += len(loc.walkers[h.INFECTED])
             statistics[R] += len(loc.walkers[h.RECOVERED_FROM_INFECTED])
-            if isinstance(loc, Home):
+            if loc.type == ls.HOME:
                 money_accum += loc.money
                 n_homes += 1
     # end for
@@ -56,7 +56,6 @@ def computeStatistics(engine):
 
     length = len(engine.contact_list)
     if (length):
-        #print(engine.contact_list)
         statistics[R0] = secondary_inf_accum / len(engine.contact_list)
 
 

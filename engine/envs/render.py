@@ -4,8 +4,19 @@ import time
 import matplotlib.pyplot as plt
 import structures.locations as ls
 import walkers.healthState as h
+import os
 
-def initRender(engine, border=20, padding=20, maxWidth = 500, name_of_window='City'):
+def initPyGame(engine, border=20, padding=20, maxWidth = 500, name_of_window='City'):
+
+    pygame.init()
+    os.environ['SDL_VIDEO_WINDOW_POS'] = '%i,%i' % (700,50)
+
+    engine.myfont = pygame.font.SysFont("monospace", 15)
+
+
+    pygame.display.set_caption(name_of_window)
+    engine.fps = pygame.time.Clock()
+    engine.paused = False 
 
     engine.maxWidth = maxWidth         # static
     engine.maxHeight = border     # dinamically updated
@@ -38,19 +49,24 @@ def initRender(engine, border=20, padding=20, maxWidth = 500, name_of_window='Ci
 
                 currentdx += loc.size_x + padding
 
-    engine.maxHeight += border
-'''
-    pygame.init()
+                engine.maxHeight += loc.size_y + padding
 
-    engine.myfont = pygame.font.SysFont("monospace", 15)
+    engine.maxHeight += border
 
     engine.screen = pygame.display.set_mode((engine.maxWidth, engine.maxHeight))
 
-    pygame.display.set_caption(name_of_window)
-    engine.fps = pygame.time.Clock()
-    engine.paused = False '''
+def initPlt(engine):
+    engine.day_counter = 0
+    engine.xdata = []
+    engine.ydata = [[], [], [], []]
+    this = plt.get_current_fig_manager()
+    this.canvas.manager.window.move(0,0)
 
-def renderFrame(engine, pause = 0.5):
+    plt.xlabel('number of days')
+    plt.ylabel('people')
+
+
+def renderFramePlt(engine):
     statistics = list(stats.computeStatistics(engine).items())
 
     engine.xdata.append(engine.day_counter)
@@ -66,36 +82,29 @@ def renderFrame(engine, pause = 0.5):
     plt.plot(engine.xdata, engine.ydata[3], 'ko-')
 
     engine.day_counter += 1
-    plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead'))
-    plt.pause(pause)
-'''
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_SPACE:
-                engine.paused = not engine.paused
-    
-    if not engine.paused:
-        engine.screen.fill((0, 0, 0))
+    plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead', 'R0: ' + str("{:.2f}".format(statistics[4][1]))))
+    plt.pause(0.01)
 
-        for locs in engine.locs:
-            idx = 0
-            for loc in locs:
+def renderFramePyGame(engine):
 
-                posx = engine.locPos[loc.type][idx][0]
-                posy = engine.locPos[loc.type][idx][1]
+    engine.screen.fill((0, 0, 0))
 
-                pygame.draw.rect(engine.screen, ls.colors[loc.type], engine.locPos[loc.type][idx])
-                label = engine.myfont.render(ls.labels[loc.type], 1, (255, 255, 255))
-                engine.screen.blit(label, (posx, posy-17))
-                
-                for walkerType in range(h.statusNum):
-                    for walker in loc.walkers[walkerType]:
-                        pygame.draw.circle(engine.screen, h.colors[walkerType], (posx+walker.x, posy+walker.y), 3, 0)
-                idx += 1
+    for locs in engine.locs:
+        idx = 0
+        for loc in locs:
+
+            posx = engine.locPos[loc.type][idx][0]
+            posy = engine.locPos[loc.type][idx][1]
+
+            pygame.draw.rect(engine.screen, ls.colors[loc.type], engine.locPos[loc.type][idx])
+            label = engine.myfont.render(ls.labels[loc.type], 1, (255, 255, 255))
+            engine.screen.blit(label, (posx, posy-17))
+            
+            for walkerType in range(h.statusNum):
+                for walker in loc.walkers[walkerType]:
+                    pygame.draw.circle(engine.screen, h.colors[walkerType], (posx+walker.x, posy+walker.y), 3, 0)
+            idx += 1
 
     pygame.display.update()
     engine.fps.tick(30)
-    '''
+    

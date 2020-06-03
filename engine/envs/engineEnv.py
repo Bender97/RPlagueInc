@@ -96,12 +96,7 @@ class EngineEnv(gym.Env):
         self.safe_dist = 0
         self.quarantine = []
 
-        self.shiftQueue = []
-
-        self.day_counter = 0
-        self.xdata = []
-        self.ydata = [[], [], [], []]
-        
+        self.shiftQueue = []        
 
         low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
         high = np.array([+math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf])
@@ -111,24 +106,13 @@ class EngineEnv(gym.Env):
 
         self.steps_done = None
 
-        # for pygame rendering
-        self.screen = None
-        self.fps = 0
-        self.paused = False
-
-        # calculate position on screen for each location
-        self.locPos = [[], [], [], [], []]
-
-
-        initRender(self, border=20, padding = 20, name_of_window='Region')
-
     # end __init__
     ##################################################################
 
     def step(self, action):
 
         for hour in range(0, 24):  # inizio delle 24 ore
-
+            print("hour: " + str(hour))
             for locList in self.locs:   # locList: one for each (HOME, WORKPLACE, SCHOOL, LEISURE, GROCERIES_STORE)
                 for loc in locList:     
                     for walkerType in range(h.statusNum):
@@ -144,7 +128,8 @@ class EngineEnv(gym.Env):
                 for loc in locList:
                     loc.run1HOUR(self)
 
-            #renderFrame(engine = self, pause = 0.5)
+            #renderFramePyGame(engine = self)
+            #time.sleep(0.05)
                 
         for loc in self.locs[ls.HOME]:
             loc.eatFood()
@@ -171,33 +156,27 @@ class EngineEnv(gym.Env):
         self.steps_done = 0
 
         self.deads = 0
-
         self.contact_list = {}
 
+        # for pygame rendering
+        self.screen = None
+        self.fps = 0
+        self.paused = False
+
+        # calculate position on screen for each location
+        self.locPos = [[], [], [], [], []]
         
+        initPlt(self)
+        initPyGame(self, border=20, padding = 20, name_of_window='Region')
 
         statistics = list(stats.computeStatistics(self).items())
 
         return statistics
 
     def render(self, mode='human'):
-        renderFrame(engine = self, pause = 0.1)
-
-    def adultHomeProbFcn(self, hour):  # hour-dependent,prob to go/stay home
-        if (hour == 12):
-            return 0.50
-        else:
-            return 1 - ((math.fabs(hour - 12) * 2) / 24.0)
-
-    def childHomeProbFcn(self, hour):
-        if (7 <= hour <= 9):
-            return 0.5
-        elif (10 <= hour <= 14):
-            return 0
-        elif (15 <= hour <= 17):
-            return 0.5
-        else:  # coprifuoco
-            return 1
+        renderFramePyGame(engine = self)
+        renderFramePlt(engine = self)
+        time.sleep(0.1)
 
     # def close(self):
 

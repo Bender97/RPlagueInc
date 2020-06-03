@@ -63,7 +63,7 @@ class Walker:
                 self.pDisease = 0.45
                 self.pDeath = 0.05
 
-        self.pDisease *= 4
+        
         self.pDeath *= 4
 
     def move(self, x, y):
