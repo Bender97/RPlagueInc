@@ -26,6 +26,6 @@ for _ in range(1000):
         input()
 
     #time.sleep(0.1)
-    if done and False:
+    if done:
         observation = env.reset(nHouses = 100)
 env.close()

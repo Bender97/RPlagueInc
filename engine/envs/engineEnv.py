@@ -186,6 +186,7 @@ class EngineEnv(gym.Env):
         end_step = time.time()
         print("time elapsed for step is: " + str(end_step - start_step))
 
+
         return st, reward, finished, {}
 
 
@@ -269,7 +270,7 @@ class EngineEnv(gym.Env):
 
 
     def isDone(self, st):
-        if st[stats.R0]==0 or self.walker_pool.getWalkerNum() == 0: #se tutti muoiono, o il virus si ferma, ridà true
+        if st[stats.I]==0 or self.walker_pool.getWalkerNum() == 0: #se tutti muoiono, o il virus si ferma, ridà true
             return True
         else:
             return False
