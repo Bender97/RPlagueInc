@@ -19,10 +19,12 @@ import engine.regiongen as reggen
 from collections import defaultdict
 import engine.statistics as stats
 
+import engine.choices as choices
+
 from engine.envs.render import *
 
 import engine.virus as vir
-from walkers.Walker import Walker
+from walkers.Walker import Walker, WalkerPool
 
 import walkers.healthState as h
 
@@ -91,13 +93,6 @@ class EngineEnv(gym.Env):
 
         self.virus = virus
 
-        self.closed_locs = []
-        self.discontent = 0
-        self.daily_discontent = 0
-
-        self.safe_dist = 0
-        self.quarantine = []
-
         self.shiftQueue = []        
 
         low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
@@ -106,7 +101,6 @@ class EngineEnv(gym.Env):
         self.action_space = spaces.Discrete(7)
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
 
-        self.steps_done = None
 
     # end __init__
     ##################################################################
@@ -115,6 +109,8 @@ class EngineEnv(gym.Env):
 
         start_step = time.time()
 
+        death_derivative = -self.deads
+
         start_hours = time.time()
 
         for hour in range(0, 24):  # inizio delle 24 ore
@@ -122,7 +118,7 @@ class EngineEnv(gym.Env):
 
             start_hour = time.time()
 
-            for w in self.walker_list:
+            for w in self.walker_pool.walker_list:
                 # apply schedule entrypoint
                 schedules.applySchedule(self, w, hour)
 
@@ -166,20 +162,50 @@ class EngineEnv(gym.Env):
         end_inf = time.time()
         print("time elapsed for infection is:" + str(end_inf - start_inf))
 
+        #Agent Choice(Edo)
+        death_derivative+=self.deads
+        st = dict(stats.computeStatistics(self).items())
+        #choices.makeChoice(action[0], action[1],self) # action in formato [type,choice]
+        choices.makeChoice(random.randint(0,1), random.randint(0,6), self)
+        exist_recovered=False
+        for w in self.walker_pool.walker_list:
+            if w.isRecovered():
+                exist_recovered= True
+                break
+        if(exist_recovered):
+            finished = self.isDone(st)
+        else:
+            finished = False
+        if(st[stats.R0]!=0):
+            reward = (-1/20.0)* self.discontent + (1/float(st[stats.R0])) - st[stats.R0] -(1/5.0) * death_derivative +(1/2.0)*st[stats.M]
+        else: #caso iniziale, in cui ci sono solo incubati
+            reward = (-1/20.0)* self.discontent -(1/5.0) * death_derivative +(1/2.0)*st[stats.M]
+
+        self.steps_done +=1
+
         end_step = time.time()
         print("time elapsed for step is: " + str(end_step - start_step))
 
-        return list(stats.computeStatistics(self).items()), 1, False, {}
+        return st, reward, finished, {}
+
 
     def reset(self, nHouses):
         self.nHouses = nHouses
 
-        self.walker_list = []
+        self.walker_pool = WalkerPool()
         
         reggen.regionGen(self)
 
         popgen.genPopulation(self)
 
+        self.closed_locs = []
+        self.discontent = 0
+        self.daily_discontent = 0
+
+        self.safe_dist = 0
+        self.quarantine = []
+
+        choices.setupChoices(self)
 
         self.steps_done = 0
 
@@ -202,7 +228,7 @@ class EngineEnv(gym.Env):
         return statistics
 
     def render(self, mode='human'):
-        renderFramePyGame(engine = self)
+        #renderFramePyGame(engine = self)
         renderFramePlt(engine = self)
         time.sleep(0.1)
 
@@ -217,26 +243,33 @@ class EngineEnv(gym.Env):
             walker = elem[0]
 
             if (locType == ls.HOME):
-                walker.exit()
-                walker.enter(walker.home)
+                self.walker_pool.exit(walker)
+                self.walker_pool.enter(walker, walker.home)
             elif (locType == ls.WORKPLACE):            
-                walker.exit()
-                walker.enter(walker.workPlace)
+                self.walker_pool.exit(walker)
+                self.walker_pool.enter(walker, walker.workPlace)
             elif (locType == ls.SCHOOL):
-                walker.exit()
-                walker.enter(walker.school)
+                self.walker_pool.exit(walker)
+                self.walker_pool.enter(walker, walker.school)
             elif (locType == ls.LEISURE):
                 target = random.randint(0, len(self.locs[ls.LEISURE]) -1)
-                walker.exit()
-                walker.enter(self.locs[ls.LEISURE][target])
+                self.walker_pool.exit(walker)
+                self.walker_pool.enter(walker, self.locs[ls.LEISURE][target])
                 
             elif (locType == ls.GROCERIES_STORE):
                 target = random.randint(0, len(self.locs[ls.GROCERIES_STORE])-1)
-                walker.exit()
-                walker.enter(self.locs[ls.GROCERIES_STORE][target])
+                self.walker_pool.exit(walker)
+                self.walker_pool.enter(walker, self.locs[ls.GROCERIES_STORE][target])
                 #print("Ora sono a" , walker.loc)
                 food = walker.home.family_qty * random.randint(3, 7)
                 walker.home.money -= walker.loc.buyFood(food)
                 walker.home.bringFood(food)
 
         self.shiftQueue = []
+
+
+    def isDone(self, st):
+        if st[stats.R0]==0 or self.walker_pool.getWalkerNum() == 0: #se tutti muoiono, o il virus si ferma, ridà true
+            return True
+        else:
+            return False

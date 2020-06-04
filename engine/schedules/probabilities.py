@@ -1,4 +1,5 @@
 ﻿import random
+import engine.schedules.schedules as s
 
 # some probability functions
 def forSure(data, value):
@@ -8,7 +9,7 @@ def uniformChoice(data, value):
     return random.random() < value
 
 def tryDisobey(data, value):
-    return random.random() < data[WALKER].disobedience
+    return random.random() < data[s.WALKER].disobedience
 
 def adultHomeProbFcn(data, value):  # hour-dependent,prob to go/stay home
     hour = data[HOUR]

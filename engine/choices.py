@@ -1,4 +1,3 @@
-from engine.envs.engineEnv import EngineEnv
 import walkers.healthState as hs
 import structures.locations as l
 
@@ -87,7 +86,7 @@ def makeChoice (type, choice, engine):
         return None
 
     # if the choice to enact is already in effect or the choice to abolish is not in effect then exit (NO OP)
-    if (type == ENACT and engine.in_effect(choice)) or (type == ABOLISH and not engine.in_effect(choice)):
+    if (type == ENACT and engine.in_effect[choice]) or (type == ABOLISH and not engine.in_effect[choice]):
         return None
 
     # get effects on choice

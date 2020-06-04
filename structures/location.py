@@ -102,17 +102,24 @@ def run1HOUR(engine):
         the virus spreading
     '''
 
-    coord_array = np.array([[w.x, w.y] for w in engine.walker_list], dtype = float)
-    sizes = np.array([[w.loc.size_x - 1, w.loc.size_y - 1] for w in engine.walker_list])
+    coord_array = np.array(engine.walker_pool.coord_list, dtype = float)
+    sizes = np.array([[w.loc.size_x - 1, w.loc.size_y - 1] for w in engine.walker_pool.walker_list])
+
+    walker_num = engine.walker_pool.getWalkerNum()
 
     diameter = 8
+
+    np_time = 0
+    dist_time = 0
 
     for _ in range(60):
             
         # 1) update positions
     
+        start = time.time()
+
         # compute a random walk
-        walks = (np.random.random((len(engine.walker_list), 2)) - 0.5) * diameter
+        walks = (np.random.random((walker_num, 2)) - 0.5) * diameter
 
         # make the walk
         coord_array += walks
@@ -120,15 +127,15 @@ def run1HOUR(engine):
         # limit the walk inside the locations
         np.clip(coord_array, 0, sizes, out = coord_array)
 
-        i = 0
-        for w in engine.walker_list:
-            w.move(coord_array[i][0], coord_array[i][1])
-            i += 1
+        end = time.time()
 
+        np_time += end - start
 
         # 2) tryInfection()
         # CHECK FOR EACH WALKER IF IT's CLOSE TO AN INFECTED
         #   IF SO -> ROLL the DICE
+
+        start = time.time()
 
         for locList in engine.locs:
             for loc in locList:
@@ -137,13 +144,13 @@ def run1HOUR(engine):
                     flag = 0    # will hold the period of incubation, if infection happens
 
                     for asymptomatic in loc.walkers[h.ASYMPTOMATIC]:
-                        if (distance(susceptible, asymptomatic) < engine.virus.range):
+                        if (distance(coord_array, susceptible, asymptomatic) < engine.virus.range):
                             flag = engine.virus.tryInfection(susceptible)
                             if (flag):
                                 break  # non ha senso fare altri controlli
                     if not flag:
                         for infected in loc.walkers[h.INFECTED]:
-                            if (distance(susceptible, infected) < engine.virus.range):
+                            if (distance(coord_array, susceptible, infected) < engine.virus.range):
                                 flag = engine.virus.tryInfection(susceptible)
                                 if (flag):
                                     susceptible.infectedBy = infected
@@ -153,9 +160,25 @@ def run1HOUR(engine):
                         loc.walkers[h.SUSCEPTIBLE].remove(susceptible)
                         loc.walkers[h.INCUBATION].append(susceptible)
 
+        end = time.time()
+
+        dist_time += end - start
+    #end for
+
+    engine.walker_pool.coord_list = coord_array.tolist()
+
+    print ("time for numpy: " + str(np_time))
+    print ("time for dist: " + str(dist_time))
+
 # end update
 
 
-def distance(walker1, walker2):
-    return math.sqrt((walker2.x - walker1.x) ** 2 + (walker2.y - walker1.y) ** 2)
+def distance(coord_list, walker1, walker2):
+
+    w1_x = coord_list[walker1.index][0]
+    w1_y = coord_list[walker1.index][1]
+    w2_x = coord_list[walker2.index][0]
+    w2_y = coord_list[walker2.index][1]
+
+    return math.sqrt((w2_x - w1_x) ** 2 + (w2_y - w1_y) ** 2)
 # end distance

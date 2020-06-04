@@ -1,14 +1,16 @@
 import random
+import numpy as np
 
 import walkers.healthState as h
 
 
 class Walker:
 
-    def __init__(self, width, height, age, disobedience, home, dutyPlace):
+    def __init__(self, age, disobedience, home, dutyPlace):
         self.status = h.SUSCEPTIBLE
-        self.x = random.randint(0,width)
-        self.y = random.randint(0,height)
+        #self.x = random.randint(0,width)
+        #self.y = random.randint(0,height)
+        self.index = None
         self.healthLevel = random.uniform(0.2, 1)
         self.healingLevel = 0 # tasso di guarigione DAL VIRUS
         self.age = age
@@ -66,10 +68,6 @@ class Walker:
         
         self.pDeath *= 4
 
-    def move(self, x, y):
-        self.x = x
-        self.y = y
-
     # updates the status with a 1 day time step.Has to be called from engine.
     #Has to work with tryDeath, when the counter reaches 0.
     def updateVirusTimer(self, value = None):
@@ -91,7 +89,7 @@ class Walker:
         return self.status == h.SUSCEPTIBLE
 
     def isRecovered(self):
-        return self.status == h.RECOVERED
+        return self.status == h.RECOVERED_FROM_INFECTED
 
     def isChild(self):
         return self.age < h.young_age
@@ -111,13 +109,47 @@ class Walker:
     def hasBadHealth(self):
         return self.healthLevel <= h.badHealth_level
 
-    def exit(self):
+    def spawnCoords(self):
+        width = self.loc.size_x
+        height = self.loc.size_y
+        return [random.randint(0,width), random.randint(0,height)]
 
-        self.loc.walkers[self.status].remove(self)
-        self.loc = None
 
-    def enter(self, target):
-        target.walkers[self.status].append(self)
-        self.loc = target
-        self.x = random.randint(0, self.loc.size_x)
-        self.y = random.randint(0, self.loc.size_y)
+class WalkerPool:
+
+    def __init__(self):
+        self.walker_list = []
+        self.coord_list = []
+    # end __init__
+
+    def add(self, walker):
+        walker.index = len(self.walker_list)
+        self.walker_list.append(walker)
+        self.coord_list.append([0, 0])
+    # end add
+
+    def remove(self, walker):
+        for i in range(walker.index + 1, self.getWalkerNum()):
+            self.walker_list[i].index -= 1
+
+        self.coord_list.pop(walker.index)
+        self.walker_list.pop(walker.index)
+    # end remove
+
+    def exit(self, walker):
+        walker.loc.walkers[walker.status].remove(walker)
+        walker.loc = None
+    # end exit
+
+    def enter(self, walker, target):
+        target.walkers[walker.status].append(walker)
+        walker.loc = target
+        self.coord_list[walker.index] = walker.spawnCoords()
+    # end enter
+
+    def getCoords (self, walker):
+        return self.coord_list[walker.index]
+    # end getCoords
+
+    def getWalkerNum (self):
+        return len(self.walker_list)

@@ -28,9 +28,7 @@ def genPopulation(env):
                 num_adult += 1
                 dutyPlace = env.locs[ls.WORKPLACE][num_adult % len(env.locs[ls.WORKPLACE])]
 
-            w = Walker( home.size_x, 
-                        home.size_y, 
-                        age, 
+            w = Walker( age, 
                         random.random(), 
                         home, 
                         dutyPlace
@@ -43,8 +41,8 @@ def genPopulation(env):
                 w.updateVirusTimer(value = random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1]))
             ################# end
 
-            env.walker_list.append(w)
-            w.enter(w.home)
+            env.walker_pool.add(w)
+            env.walker_pool.enter(w, w.home)
 
 
 

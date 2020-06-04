@@ -102,7 +102,8 @@ def renderFramePyGame(engine):
             
             for walkerType in range(h.statusNum):
                 for walker in loc.walkers[walkerType]:
-                    pygame.draw.circle(engine.screen, h.colors[walkerType], (posx+int(walker.x), posy+int(walker.y)), 3, 0)
+                    walker_x, walker_y = engine.walker_pool.getCoords(walker)
+                    pygame.draw.circle(engine.screen, h.colors[walkerType], (posx+int(walker_x), posy+int(walker_y)), 3, 0)
             idx += 1
 
     pygame.display.update()
