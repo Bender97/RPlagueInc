@@ -102,14 +102,14 @@ def run1HOUR(engine):
         the virus spreading
     '''
 
+    coord_array = np.array([[w.x, w.y] for w in engine.walker_list], dtype = float)
+    sizes = np.array([[w.loc.size_x - 1, w.loc.size_y - 1] for w in engine.walker_list])
+
+    diameter = 8
+
     for _ in range(60):
             
         # 1) update positions
-
-        coord_array = np.array([[w.x, w.y] for w in engine.walker_list], dtype = float)
-        sizes = np.array([[w.loc.size_x - 1, w.loc.size_y - 1] for w in engine.walker_list])
-
-        diameter = 8
     
         # compute a random walk
         walks = (np.random.random((len(engine.walker_list), 2)) - 0.5) * diameter
