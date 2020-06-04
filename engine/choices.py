@@ -23,9 +23,23 @@ CH_CL_SCHOOLS = 4
 CH_CL_LEISURES = 5
 CH_CL_WORK = 6
 
+CH_STR = {
+    CH_MAND_MASKS: "mandatory masks",
+    CH_MAND_DIST: "mandatory safe distance",
+    CH_QUAR_INF: "quarantined infected",
+    CH_CL_SCHOOLS: "school closed",
+    CH_CL_LEISURES: "leisure places closed",
+    CH_CL_WORK: "work places closed"
+}
+
 # Action types
 ENACT = 0
 ABOLISH = 1
+
+ACT_STR = {
+    ENACT: "enacted",
+    ABOLISH: "abolished"
+    }
 
 # Effects
 P_INF_MULT = 0
@@ -80,7 +94,7 @@ def isEnacted (choice, engine):
 # end inEnacted
 
 def makeChoice (type, choice, engine):
-    
+
     # if the choice is noop don't do anything
     if choice == CH_NOOP:
         return None
@@ -95,6 +109,8 @@ def makeChoice (type, choice, engine):
     # apply all effects of the choice
     for e in effects.keys():
         applyEffect(e, effects[e], engine)
+
+    print("Choice " + CH_STR[choice] + " was " + ACT_STR[type])
 
     # publish enact/abolish on the engine choices
     effect_result = type == ENACT

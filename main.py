@@ -9,7 +9,7 @@ virus = Virus(range = 3, pInfection = 1 , healthParams = 1, healingParams = 1)
 #create the cartpole environment
 env = gym.make("engine-v0")
 
-observation = env.reset(nHouses = 100)
+observation = env.reset(nHouses = 40)
 
 env.initialize(virus = virus)
 
@@ -27,5 +27,5 @@ for _ in range(1000):
 
     #time.sleep(0.1)
     if done:
-        observation = env.reset(nHouses = 100)
+        observation = env.reset(nHouses = 40)
 env.close()

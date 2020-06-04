@@ -81,8 +81,6 @@ class EngineEnv(gym.Env):
     def __init__(self):
         self.nLocation = None
         self.nHouses = None
-
-        self.locs = [[], [], [], [], []]
         return
 
     def initialize(self, virus):
@@ -114,7 +112,7 @@ class EngineEnv(gym.Env):
         start_hours = time.time()
 
         for hour in range(0, 24):  # inizio delle 24 ore
-            print("hour: " + str(hour))
+            #print("hour: " + str(hour))
 
             start_hour = time.time()
 
@@ -124,26 +122,26 @@ class EngineEnv(gym.Env):
 
 
             end_hour = time.time()
-            print("time elapsed for hour is: " + str(end_hour - start_hour))
+            #print("time elapsed for hour is: " + str(end_hour - start_hour))
 
             start_shift = time.time()
             # commit each shifted in the queue
             self.commitShift()
             end_shift = time.time()
-            print("time elapsed for shift is: " + str(end_shift - start_shift))
+            #print("time elapsed for shift is: " + str(end_shift - start_shift))
 
             start_loc = time.time()
             # shift committed, it's time to run the hour
             l.run1HOUR(self)
 
             end_loc = time.time()
-            print("time elapsed for location is: " + str(end_loc - start_loc))
+            #print("time elapsed for location is: " + str(end_loc - start_loc))
 
             #renderFramePyGame(engine = self)
             #time.sleep(0.05)
                 
         end_hours = time.time()
-        print("time elapsed for day is:" + str(end_hours - start_hours))
+        #print("time elapsed for day is:" + str(end_hours - start_hours))
 
         for loc in self.locs[ls.HOME]:
             loc.eatFood()
@@ -160,7 +158,7 @@ class EngineEnv(gym.Env):
                     self.virus.tryDeath(w, self)
 
         end_inf = time.time()
-        print("time elapsed for infection is:" + str(end_inf - start_inf))
+        #print("time elapsed for infection is:" + str(end_inf - start_inf))
 
         #Agent Choice(Edo)
         death_derivative+=self.deads
@@ -184,7 +182,7 @@ class EngineEnv(gym.Env):
         self.steps_done +=1
 
         end_step = time.time()
-        print("time elapsed for step is: " + str(end_step - start_step))
+        #print("time elapsed for step is: " + str(end_step - start_step))
 
 
         return st, reward, finished, {}
@@ -195,6 +193,7 @@ class EngineEnv(gym.Env):
 
         self.walker_pool = WalkerPool()
         
+        self.locs = [[], [], [], [], []]
         reggen.regionGen(self)
 
         popgen.genPopulation(self)
@@ -222,7 +221,7 @@ class EngineEnv(gym.Env):
         self.locPos = [[], [], [], [], []]
         
         initPlt(self)
-        initPyGame(self, border=20, padding = 20, name_of_window='Region')
+        #initPyGame(self, border=20, padding = 20, name_of_window='Region')
 
         statistics = list(stats.computeStatistics(self).items())
 
@@ -231,7 +230,7 @@ class EngineEnv(gym.Env):
     def render(self, mode='human'):
         #renderFramePyGame(engine = self)
         renderFramePlt(engine = self)
-        time.sleep(0.1)
+        #time.sleep(0.1)
 
     # def close(self):
 

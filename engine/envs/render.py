@@ -62,6 +62,8 @@ def initPlt(engine):
     #this = plt.get_current_fig_manager()
     #this.canvas.manager.window.move(0,0)
 
+    plt.clf()
+
     plt.xlabel('number of days')
     plt.ylabel('people')
 

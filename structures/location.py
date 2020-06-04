@@ -167,8 +167,8 @@ def run1HOUR(engine):
 
     engine.walker_pool.coord_list = coord_array.tolist()
 
-    print ("time for numpy: " + str(np_time))
-    print ("time for dist: " + str(dist_time))
+    #print ("time for numpy: " + str(np_time))
+    #print ("time for dist: " + str(dist_time))
 
 # end update
 
