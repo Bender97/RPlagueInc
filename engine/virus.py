@@ -11,7 +11,7 @@ class Virus:
         self.healingParams = healingParams #parametri funzione affine di "guarigione"
 
     def tryInfection(self,walker):
-        if random.random() < self.pInfection:
+        if walker.isSusceptible() and random.random() < self.pInfection:
             walker.setStatus(h.INCUBATION)
             return random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1])
         else:

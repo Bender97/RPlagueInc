@@ -85,7 +85,7 @@ class Walker:
     def isInfected(self):
         return self.status==h.INFECTED
 
-    def isSubsceptible(self):
+    def isSusceptible(self):
         return self.status == h.SUSCEPTIBLE
 
     def isRecovered(self):

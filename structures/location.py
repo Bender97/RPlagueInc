@@ -4,6 +4,7 @@ import random
 import math
 
 import numpy as np
+from scipy.spatial import distance_matrix
 
 import time
 
@@ -136,29 +137,31 @@ def run1HOUR(engine):
         #   IF SO -> ROLL the DICE
 
         start = time.time()
-
+        
         for locList in engine.locs:
             for loc in locList:
 
                 for susceptible in loc.walkers[h.SUSCEPTIBLE]:
                     flag = 0    # will hold the period of incubation, if infection happens
 
-                    for asymptomatic in loc.walkers[h.ASYMPTOMATIC]:
-                        if (distance(coord_array, susceptible, asymptomatic) < engine.virus.range):
+                    for infected in loc.walkers[h.INFECTED]:
+                        if (distance(coord_array, susceptible, infected) < engine.virus.range):
                             flag = engine.virus.tryInfection(susceptible)
                             if (flag):
-                                break  # non ha senso fare altri controlli
+                                susceptible.infectedBy = infected
+                                    break  # non ha senso fare altri controlli
                     if not flag:
-                        for infected in loc.walkers[h.INFECTED]:
-                            if (distance(coord_array, susceptible, infected) < engine.virus.range):
+                        for asymptomatic in loc.walkers[h.ASYMPTOMATIC]:
+                            if (distance(coord_array, susceptible, asymptomatic) < engine.virus.range):
                                 flag = engine.virus.tryInfection(susceptible)
                                 if (flag):
-                                    susceptible.infectedBy = infected
                                     break  # non ha senso fare altri controlli
+                        
                     if flag:
                         susceptible.updateVirusTimer(value=flag)
                         loc.walkers[h.SUSCEPTIBLE].remove(susceptible)
                         loc.walkers[h.INCUBATION].append(susceptible)
+
 
         end = time.time()
 
