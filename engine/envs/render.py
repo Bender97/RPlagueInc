@@ -100,6 +100,13 @@ def renderFramePyGame(engine):
 
             pygame.draw.rect(engine.screen, ls.colors[loc.type], engine.locPos[loc.type][idx])
             label = engine.myfont.render(ls.labels[loc.type], 1, (255, 255, 255))
+            if loc.type == ls.HOME:
+                food = engine.myfont.render(str(loc.food_qty), 1, (255, 255, 255))
+                money = engine.myfont.render(str(loc.money), 1, (255, 255, 255))
+                engine.screen.blit(food, (posx, posy))
+                engine.screen.blit(money, (posx, posy+17))
+
+
             engine.screen.blit(label, (posx, posy-17))
             
             for walkerType in range(h.statusNum):

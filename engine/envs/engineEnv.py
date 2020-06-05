@@ -161,6 +161,10 @@ class EngineEnv(gym.Env):
         #print("time elapsed for infection is:" + str(end_inf - start_inf))
 
         #Agent Choice(Edo)
+
+        self.discontent += self.daily_discontent
+        print ("Discontent of the day = " + str(self.discontent))
+
         death_derivative+=self.deads
         st = dict(stats.computeStatistics(self).items())
         exist_recovered=False
@@ -178,10 +182,10 @@ class EngineEnv(gym.Env):
             reward = (-1/20.0)* self.discontent -(1/5.0) * death_derivative +(1/2.0)*st[stats.M]
 
         self.steps_done +=1
+        self.discontent = 0
 
         end_step = time.time()
         #print("time elapsed for step is: " + str(end_step - start_step))
-
 
         return st, reward, finished, {}
 
@@ -246,6 +250,8 @@ class EngineEnv(gym.Env):
             elif (locType == ls.WORKPLACE):            
                 self.walker_pool.exit(walker)
                 self.walker_pool.enter(walker, walker.workPlace)
+                salary = walker.workPlace.getSalary()
+                walker.home.money += salary
             elif (locType == ls.SCHOOL):
                 self.walker_pool.exit(walker)
                 self.walker_pool.enter(walker, walker.school)

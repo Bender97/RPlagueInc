@@ -104,21 +104,28 @@ SCHEDULES = {
 
 
 def applySchedule(engine, walker, hour):
-    age = 0
-    if walker.isChild():
-        #print("Child ")
-        age = CHILD
-    elif walker.isAdult():
-        #print("Adult ")
-        age = ADULT
-    elif walker.isElder():
-        #print("Elderly ")
-        age = ELDERLY
 
-    # get the correct schedule by age
-    schedule = SCHEDULES[age]
-    # do the right activity by schedule
-    doActivities(engine, walker, schedule, hour)
+    # if the walker is in a quarantined status then stay home
+    if walker.status in engine.quarantine:
+        doAct(engine, Activity(fork.start, fork.end, A_STAY_HOME), walker)
+
+    # else follow the schedule
+    else:
+        age = 0
+        if walker.isChild():
+            #print("Child ")
+            age = CHILD
+        elif walker.isAdult():
+            #print("Adult ")
+            age = ADULT
+        elif walker.isElder():
+            #print("Elderly ")
+            age = ELDERLY
+
+        # get the correct schedule by age
+        schedule = SCHEDULES[age]
+        # do the right activity by schedule
+        doActivities(engine, walker, schedule, hour)
 # end applySchedule
 
 def doActivities (engine, walker, schedule, hour):
