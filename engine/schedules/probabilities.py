@@ -12,14 +12,14 @@ def tryDisobey(data, value):
     return random.random() < data[s.WALKER].disobedience
 
 def adultHomeProbFcn(data, value):  # hour-dependent,prob to go/stay home
-    hour = data[HOUR]
+    hour = data[s.HOUR]
     if (hour == 12):
         return 0.50
     else:
         return random.random() < 1 - ((math.fabs(hour - 12) * 2) / 24.0)
 
 def childHomeProbFcn(data, value):
-    hour = data[HOUR]
+    hour = data[s.HOUR]
     th = 0
     if (7 <= hour <= 9):
         th = 0.5
