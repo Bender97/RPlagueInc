@@ -8,4 +8,4 @@ in /RPlagueInc:
 - pip3 install -e .
 
 To run:
-- python3 main.py
+- python3 mainNet.py
