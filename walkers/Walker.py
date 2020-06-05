@@ -14,8 +14,8 @@ class Walker:
         self.healthLevel = random.uniform(0.2, 1)
         self.healingLevel = 0 # tasso di guarigione DAL VIRUS
         self.age = age
-        self.disobedience = disobedience
-
+        self.disobedience = disobedience        # low level: obedient
+                                                # high level: disobedient, also: it listens to Justin Bieber, too strong
         self.home = home
 
         if self.isChild():

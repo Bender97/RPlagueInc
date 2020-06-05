@@ -29,7 +29,7 @@ def genPopulation(env):
                 dutyPlace = env.locs[ls.WORKPLACE][num_adult % len(env.locs[ls.WORKPLACE])]
 
             w = Walker( age, 
-                        random.random(), 
+                        random.random(), #disobedience
                         home, 
                         dutyPlace
                         )

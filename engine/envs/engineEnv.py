@@ -81,23 +81,37 @@ class EngineEnv(gym.Env):
     def __init__(self):
         self.nLocation = None
         self.nHouses = None
+
+        high = np.array([np.finfo(np.float32).max,
+                         np.finfo(np.float32).max,
+                         np.finfo(np.float32).max,
+                         np.finfo(np.float32).max,
+                         np.finfo(np.float32).max,
+                         np.finfo(np.float32).max],
+                        dtype=np.float32)
+        low = np.array([0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0],
+                        dtype=np.float32)
+
+        self.action_space = spaces.Discrete(choices.N_CHOICES)
+        self.observation_space = spaces.Box(low, high, dtype=np.float32)
+
         return
 
-    def initialize(self, virus):
+    def initialize(self, virus, nHouses):
         
-        if (self.nHouses == None):
-            print("error: nHouses is None. Have you called reset() before calling initialize()?")
-            exit(1)
+        self.nHouses = nHouses
+        #if (self.nHouses == None):
+        #    print("error: nHouses is None. Have you called reset() before calling initialize()?")
+        #    exit(1)
 
         self.virus = virus
 
-        self.shiftQueue = []        
-
-        low = np.array([0, 0, 0, 0, -math.inf, 0, 0])
-        high = np.array([+math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf, +math.inf])
-
-        self.action_space = spaces.Discrete(7)
-        self.observation_space = spaces.Box(low, high, dtype=np.float32)
+        self.shiftQueue = []
 
 
     # end __init__
@@ -166,7 +180,8 @@ class EngineEnv(gym.Env):
         print ("Discontent of the day = " + str(self.discontent))
 
         death_derivative+=self.deads
-        st = dict(stats.computeStatistics(self).items())
+        statistics = stats.computeStatistics(self)
+        st = dict(statistics.items())
         exist_recovered=False
         for w in self.walker_pool.walker_list:
             if w.isRecovered():
@@ -187,11 +202,10 @@ class EngineEnv(gym.Env):
         end_step = time.time()
         #print("time elapsed for step is: " + str(end_step - start_step))
 
-        return st, reward, finished, {}
+        return list(statistics.values()), reward, finished, {}
 
 
-    def reset(self, nHouses):
-        self.nHouses = nHouses
+    def reset(self):
 
         self.walker_pool = WalkerPool()
         
@@ -225,7 +239,7 @@ class EngineEnv(gym.Env):
         initPlt(self)
         initPyGame(self, border=20, padding = 20, name_of_window='Region')
 
-        statistics = list(stats.computeStatistics(self).items())
+        statistics = list(stats.computeStatistics(self).values())
 
         return statistics
 
