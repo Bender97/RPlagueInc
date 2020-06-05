@@ -163,8 +163,6 @@ class EngineEnv(gym.Env):
         #Agent Choice(Edo)
         death_derivative+=self.deads
         st = dict(stats.computeStatistics(self).items())
-        #choices.makeChoice(action[0], action[1],self) # action in formato [type,choice]
-        choices.makeChoice(random.randint(0,1), random.randint(0,6), self)
         exist_recovered=False
         for w in self.walker_pool.walker_list:
             if w.isRecovered():
@@ -221,14 +219,14 @@ class EngineEnv(gym.Env):
         self.locPos = [[], [], [], [], []]
         
         initPlt(self)
-        #initPyGame(self, border=20, padding = 20, name_of_window='Region')
+        initPyGame(self, border=20, padding = 20, name_of_window='Region')
 
         statistics = list(stats.computeStatistics(self).items())
 
         return statistics
 
     def render(self, mode='human'):
-        #renderFramePyGame(engine = self)
+        renderFramePyGame(engine = self)
         renderFramePlt(engine = self)
         #time.sleep(0.1)
 
