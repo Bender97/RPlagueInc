@@ -137,12 +137,59 @@ def run1HOUR(engine):
 
         start = time.time()
         
-        for locList in engine.locs:
-            for loc in locList:
+        if (engine.safe_dist):
+            processSecurityProximity(engine, coord_array)
+        else:
+            processFairProximity(engine, coord_array)
 
-                for susceptible in loc.walkers[h.SUSCEPTIBLE]:
-                    flag = 0    # will hold the period of incubation, if infection happens
+        end = time.time()
 
+        dist_time += end - start
+    #end for
+
+    engine.walker_pool.coord_list = coord_array.tolist()
+
+    #print ("time for numpy: " + str(np_time))
+    #print ("time for dist: " + str(dist_time))
+
+# end update
+
+def processFairProximity(engine, coord_array):
+    for locList in engine.locs:
+        for loc in locList:
+
+            for susceptible in loc.walkers[h.SUSCEPTIBLE]:
+                flag = 0    # will hold the period of incubation, if infection happens
+
+                for infected in loc.walkers[h.INFECTED]:
+
+                    if (distance(coord_array, susceptible, infected) < engine.virus.range):
+                        flag = engine.virus.tryInfection(susceptible)
+                        if (flag):
+                            susceptible.infectedBy = infected
+                            break  # non ha senso fare altri controlli
+                if not flag:
+                    for asymptomatic in loc.walkers[h.ASYMPTOMATIC]:
+                        if (distance(coord_array, susceptible, asymptomatic) < engine.virus.range):
+                            flag = engine.virus.tryInfection(susceptible)
+                            if (flag):
+                                break  # non ha senso fare altri controlli
+                    
+                if flag:
+                    susceptible.updateVirusTimer(value=flag)
+                    loc.walkers[h.SUSCEPTIBLE].remove(susceptible)
+                    loc.walkers[h.INCUBATION].append(susceptible)
+
+def processSecurityProximity(engine, coord_array):
+    for locList in engine.locs:
+        for loc in locList:
+
+            for susceptible in loc.walkers[h.SUSCEPTIBLE]:
+                flag = 0    # will hold the period of incubation, if infection happens
+
+                # roll  comparison is with less than because low level (obedience) will happen fewer times
+                
+                if (random.random() < susceptible.disobedience):    # if it's itself being a dickhead, no need to check the other
                     for infected in loc.walkers[h.INFECTED]:
                         if (distance(coord_array, susceptible, infected) < engine.virus.range):
                             flag = engine.virus.tryInfection(susceptible)
@@ -160,19 +207,28 @@ def run1HOUR(engine):
                         susceptible.updateVirusTimer(value=flag)
                         loc.walkers[h.SUSCEPTIBLE].remove(susceptible)
                         loc.walkers[h.INCUBATION].append(susceptible)
+                else :
+                    for infected in loc.walkers[h.INFECTED]:
+                        #roll for disobedience -> if buono, allora niente distance
+                        if (random.random() < infected.disobedience):
+                            if (distance(coord_array, susceptible, infected) < engine.virus.range):
+                                flag = engine.virus.tryInfection(susceptible)
+                                if (flag):
+                                    susceptible.infectedBy = infected
+                                    break  # non ha senso fare altri controlli
+                    if not flag:
+                        for asymptomatic in loc.walkers[h.ASYMPTOMATIC]:
+                            if (random.random() < asymptomatic.disobedience):
+                                if (distance(coord_array, susceptible, asymptomatic) < engine.virus.range):
+                                    flag = engine.virus.tryInfection(susceptible)
+                                    if (flag):
+                                        break  # non ha senso fare altri controlli
+                        
+                    if flag:
+                        susceptible.updateVirusTimer(value=flag)
+                        loc.walkers[h.SUSCEPTIBLE].remove(susceptible)
+                        loc.walkers[h.INCUBATION].append(susceptible)
 
-
-        end = time.time()
-
-        dist_time += end - start
-    #end for
-
-    engine.walker_pool.coord_list = coord_array.tolist()
-
-    #print ("time for numpy: " + str(np_time))
-    #print ("time for dist: " + str(dist_time))
-
-# end update
 
 
 def distance(coord_list, walker1, walker2):
