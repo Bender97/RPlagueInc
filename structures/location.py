@@ -4,7 +4,6 @@ import random
 import math
 
 import numpy as np
-from scipy.spatial import distance_matrix
 
 import time
 
@@ -149,7 +148,7 @@ def run1HOUR(engine):
                             flag = engine.virus.tryInfection(susceptible)
                             if (flag):
                                 susceptible.infectedBy = infected
-                                    break  # non ha senso fare altri controlli
+                                break  # non ha senso fare altri controlli
                     if not flag:
                         for asymptomatic in loc.walkers[h.ASYMPTOMATIC]:
                             if (distance(coord_array, susceptible, asymptomatic) < engine.virus.range):

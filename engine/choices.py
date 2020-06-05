@@ -66,16 +66,16 @@ EFFECTS_DICT = {
         ABOLISH : {FREE_WALKERS: hs.INFECTED}
     },
     CH_CL_SCHOOLS: {
-        ENACT   : {CLOSE_LOCS: l.School, ADD_DISCONTENT_NOW: 200},
-        ABOLISH : {OPEN_LOCS: l.School}
+        ENACT   : {CLOSE_LOCS: l.SCHOOL, ADD_DISCONTENT_NOW: 200},
+        ABOLISH : {OPEN_LOCS: l.SCHOOL}
     },
     CH_CL_LEISURES: {
-        ENACT   : {CLOSE_LOCS: l.Leisure, ADD_DISCONTENT_NOW: 600},
-        ABOLISH : {OPEN_LOCS: l.Leisure}
+        ENACT   : {CLOSE_LOCS: l.LEISURE, ADD_DISCONTENT_NOW: 600},
+        ABOLISH : {OPEN_LOCS: l.LEISURE}
     },
     CH_CL_WORK: {
-        ENACT   : {CLOSE_LOCS: l.Workplace, ADD_DISCONTENT_NOW: 400},
-        ABOLISH : {OPEN_LOCS: l.Workplace}
+        ENACT   : {CLOSE_LOCS: l.WORKPLACE, ADD_DISCONTENT_NOW: 400},
+        ABOLISH : {OPEN_LOCS: l.WORKPLACE}
     }
 }
 
