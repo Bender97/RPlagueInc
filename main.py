@@ -11,9 +11,9 @@ virus = Virus(range = 3, pInfection = 1 , healthParams = 1, healingParams = 1)
 #create the cartpole environment
 env = gym.make("engine-v0")
 
-observation = env.reset(nHouses = 40)
+env.initialize(virus = virus, nHouses = 40, render = env.RENDER_ALL_DAILY)
 
-env.initialize(virus = virus)
+observation = env.reset()
 
 for _ in range(1000):
     env.render()
@@ -22,8 +22,8 @@ for _ in range(1000):
     
     #choices.makeChoice(action[0], action[1],self) # action in formato [type,choice]
     #choices.makeChoice(random.randint(0,1), random.randint(0,6), env)
-    choices.makeChoice(choices.ENACT, choices.CH_CL_WORK, env)
-    choices.makeChoice(choices.ENACT, choices.CH_CL_LEISURES, env)
+    #choices.makeChoice(choices.ENACT, choices.CH_CL_WORK, env)
+    #choices.makeChoice(choices.ENACT, choices.CH_CL_LEISURES, env)
     choices.makeChoice(choices.ENACT, choices.CH_CL_SCHOOLS, env)
 
     print("inf: " + str(observation[1]))
@@ -35,5 +35,5 @@ for _ in range(1000):
 
     #time.sleep(0.1)
     if done:
-        observation = env.reset(nHouses = 40)
+        observation = env.reset()
 env.close()
