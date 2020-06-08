@@ -177,7 +177,6 @@ def doAct (engine, act, walker):
                  # if the walker cannot go to work -> won't have a salary -> won't have food -> add discontent
                 if ls.WORKPLACE in engine.closed_locs:
                     engine.goToLoc(walker, ls.HOME)
-                    engine.discontent += 10
                 else:
                     engine.goToLoc(walker, ls.WORKPLACE)
         elif activity == A_SCHOOL:
@@ -186,7 +185,6 @@ def doAct (engine, act, walker):
                     # if the walker cannot go to school -> TODO
                 if ls.SCHOOL in engine.closed_locs:
                     engine.goToLoc(walker, ls.HOME)
-                    engine.discontent += 10
                 else:
                     engine.goToLoc(walker, ls.SCHOOL)
 # end doAct
