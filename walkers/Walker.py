@@ -33,15 +33,20 @@ class Walker:
 
 
         # maybe this part should be delegated to a function
+        # remember there is also the virus stats severity and lethality
+
+        self.pDisease = self.age / 100 * 0.5 + (1 - self.healthLevel) * 0.5
+        self.pDeath = self.age / 100 * 0.5 + (1 - self.healthLevel) * 0.5
+        '''
         if self.isChild():
             if self.hasGoodHealth():
-                self.pDisease = 0.9
+                self.pDisease = 0
                 self.pDeath = 0
             elif self.hasBadHealth():
-                self.pDisease = 0.7
+                self.pDisease = 0.3
                 self.pDeath = 0.005
             else:
-                self.pDisease = 0.8
+                self.pDisease = 0.2
                 self.pDeath = 0.02
 
         elif self.isElder():
@@ -49,24 +54,23 @@ class Walker:
                 self.pDisease = 0.4
                 self.pDeath = 0.03
             elif self.hasBadHealth():
-                self.pDisease = 0.1
+                self.pDisease = 0.8
                 self.pDeath = 0.04
             else:
-                self.pDisease = 0.25
+                self.pDisease = 0.6
                 self.pDeath = 0.05
         else:
             if self.hasGoodHealth():
-                self.pDisease = 0.6
+                self.pDisease = 0.3
                 self.pDeath = 0.03
             elif self.hasBadHealth():
-                self.pDisease = 0.3
+                self.pDisease = 0.7
                 self.pDeath = 0.04
             else:
-                self.pDisease = 0.45
+                self.pDisease = 0.5
                 self.pDeath = 0.05
-
-        
-        self.pDeath *= 4
+        '''
+       
 
     # updates the status with a 1 day time step.Has to be called from engine.
     #Has to work with tryDeath, when the counter reaches 0.

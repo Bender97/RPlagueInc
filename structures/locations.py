@@ -52,7 +52,7 @@ STORE_X = 60
 STORE_Y = 80
 STORE_CAPACITY = 30
 
-FOOD_PRICE = 3
+FOOD_PRICE = 40
 
 # School default parameters
 SCHOOL_X = 100

@@ -176,6 +176,7 @@ def processFairProximity(engine, coord_array):
                         if (distance(coord_array, susceptible, asymptomatic) < engine.virus.range):
                             flag = engine.virus.tryInfection(susceptible)
                             if (flag):
+                                susceptible.infectedBy = asymptomatic
                                 break  # non ha senso fare altri controlli
                     
                 if flag:
@@ -204,6 +205,7 @@ def processSecurityProximity(engine, coord_array):
                             if (distance(coord_array, susceptible, asymptomatic) < engine.virus.range):
                                 flag = engine.virus.tryInfection(susceptible)
                                 if (flag):
+                                    susceptible.infectedBy = asymptomatic
                                     break  # non ha senso fare altri controlli
                         
                     if flag:
@@ -225,6 +227,7 @@ def processSecurityProximity(engine, coord_array):
                                 if (distance(coord_array, susceptible, asymptomatic) < engine.virus.range):
                                     flag = engine.virus.tryInfection(susceptible)
                                     if (flag):
+                                        susceptible.infectedBy = asymptomatic
                                         break  # non ha senso fare altri controlli
                         
                     if flag:

@@ -179,7 +179,7 @@ class EngineEnv(gym.Env):
             if not loc.needFood():
                 loc.eatFood()
             else:
-                self.discontent += 20
+                self.discontent += 100
         
         start_inf = time.time()
 
@@ -218,6 +218,8 @@ class EngineEnv(gym.Env):
             reward = (-1/20.0)* self.discontent -(1/5.0) * death_derivative +(1/2.0)*st[stats.M]
 
         self.steps_done +=1
+
+        print ("discontent: " + str(self.discontent))
         self.discontent = 0
 
         end_step = time.time()

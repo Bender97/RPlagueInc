@@ -84,7 +84,7 @@ class DQNSolver:
 
 def cartpole():
     env = gym.make(ENV_NAME)
-    virus = Virus(range = 3, pInfection = 1 , healthParams = 1, healingParams = 1)
+    virus = Virus(range = 2, pInfection = 0.1, severity = 0.2, lethality = 0.1)
     env.initialize(virus = virus, nHouses = 40)
     #score_logger = ScoreLogger(ENV_NAME)    
 

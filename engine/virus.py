@@ -4,11 +4,11 @@ import random
 import numpy as np
 
 class Virus:
-    def __init__(self,range, pInfection, healthParams, healingParams):
+    def __init__(self,range, pInfection, severity, lethality):
         self.range = range
         self.pInfection = pInfection
-        self.healthParams = healthParams #parametri funzione affine di "danno"
-        self.healingParams = healingParams #parametri funzione affine di "guarigione"
+        self.severity = severity
+        self.lethality = lethality
 
     def tryInfection(self,walker):
         if walker.isSusceptible() and random.random() < self.pInfection:
@@ -28,11 +28,11 @@ class Virus:
             
             walker.loc.walkers[h.INCUBATION].remove(walker)
             
-            if random.random() < walker.pDisease:
+            if random.random() < (walker.pDisease + self.severity) * self.severity:
                 walker.setStatus(h.INFECTED)
                 walker.updateVirusTimer(value = random.randint(h.DISEASE_DURATION_RANGE[0], h.DISEASE_DURATION_RANGE[1]))
                 walker.loc.walkers[h.INFECTED].append(walker)
-                
+
                 if walker.infectedBy in engine.contact_list:
                     engine.contact_list[walker.infectedBy] += 1
                 elif walker.infectedBy != None:
@@ -61,8 +61,11 @@ class Virus:
 
         if walker.getVirusTimer() <= 0:
             walker.loc.walkers[h.INFECTED].remove(walker)
+
+            #if walker not in engine.contact_list:
+            #    engine.contact_list[walker] = 0
             
-            if random.random() < walker.pDeath:
+            if random.random() < (walker.pDeath + self.lethality) * self.lethality:
                 walker.setStatus(h.DEAD)
                 walker.loc = None
                 engine.deads += 1
@@ -71,8 +74,6 @@ class Virus:
             else:
                 walker.setStatus(h.RECOVERED_FROM_INFECTED)
                 walker.loc.walkers[h.RECOVERED_FROM_INFECTED].append(walker)
-                if walker not in engine.contact_list:
-                    engine.contact_list[walker] = 0
                 return 0
     # commented FOR FURTHER WORKS
     #def computeDmg(self,walkerData): #walkerData contiene un vettore a cui verrà applicato il prodotto scalare con healthParams

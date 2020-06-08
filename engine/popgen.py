@@ -3,6 +3,8 @@ import walkers.healthState as h
 from walkers.Walker import Walker
 import structures.locations as ls
 
+INITIAL_CASES = 2
+
 def genPopulation(env):
 
     num_child = -1
@@ -34,16 +36,17 @@ def genPopulation(env):
                         dutyPlace
                         )
 
-            ################# generate INFECTED (only INCUBATION)
-
-            if (random.random()<0.2):
-                w.setStatus(h.INCUBATION)
-                w.updateVirusTimer(value = random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1]))
-            ################# end
-
             env.walker_pool.add(w)
             env.walker_pool.enter(w, w.home)
 
+    ################# generate INFECTED (only INCUBATION)
 
+    to_infect = random.sample(env.walker_pool.walker_list, INITIAL_CASES)
+    for w in to_infect:
+        env.walker_pool.exit(w)
+        w.setStatus(h.INCUBATION)
+        w.updateVirusTimer(value = random.randint(h.INCUBATION_DURATION_RANGE[0], h.INCUBATION_DURATION_RANGE[1]))
+        env.walker_pool.enter(w, w.home)
+    ################# end
 
     print(str(num_child + num_adult + num_elder) + " people have been generated")
