@@ -107,7 +107,9 @@ def applySchedule(engine, walker, hour):
 
     # if the walker is in a quarantined status then stay home
     if walker.status in engine.quarantine:
-        doAct(engine, Activity(fork.start, fork.end, A_STAY_HOME), walker)
+        #doAct(engine, Activity(fork.start, fork.end, A_STAY_HOME), walker)
+        if not walker.loc.type == ls.HOME:
+            engine.goToLoc(walker, ls.HOME)
 
     # else follow the schedule
     else:
@@ -163,7 +165,8 @@ def doAct (engine, act, walker):
         elif activity == A_FUN:
             #print("Having fun")
             if not walker.loc.type == ls.LEISURE:
-                if ls.LEISURE in engine.closed_locs:
+                # if the walker cannot go to have fun -> add discontent
+                if ls.LEISURE in engine.closed_locs: 
                     engine.goToLoc(walker, ls.HOME)
                     engine.discontent += 10
                 else:
@@ -171,6 +174,7 @@ def doAct (engine, act, walker):
         elif activity == A_WORK:
             #print("Working")
             if not walker.loc.type == ls.WORKPLACE:
+                 # if the walker cannot go to work -> won't have a salary -> won't have food -> add discontent
                 if ls.WORKPLACE in engine.closed_locs:
                     engine.goToLoc(walker, ls.HOME)
                     engine.discontent += 10
@@ -179,6 +183,7 @@ def doAct (engine, act, walker):
         elif activity == A_SCHOOL:
             #print("Going to school")
             if not walker.loc.type == ls.SCHOOL:
+                    # if the walker cannot go to school -> TODO
                 if ls.SCHOOL in engine.closed_locs:
                     engine.goToLoc(walker, ls.HOME)
                     engine.discontent += 10

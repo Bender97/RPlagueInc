@@ -152,6 +152,9 @@ def run1HOUR(engine):
     #print ("time for numpy: " + str(np_time))
     #print ("time for dist: " + str(dist_time))
 
+    if engine.renderMode == engine.RENDER_ALL_HOUR:
+        engine.render()
+
 # end update
 
 def processFairProximity(engine, coord_array):

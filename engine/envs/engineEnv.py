@@ -30,7 +30,6 @@ import walkers.healthState as h
 
 import engine.schedules.schedules as schedules
 
-
 class EngineEnv(gym.Env):
     """
     Description:
@@ -79,6 +78,14 @@ class EngineEnv(gym.Env):
 
     # TODO
     def __init__(self):
+
+        self.RENDER_ALL_DAILY    = 0
+        self.RENDER_ALL_HOUR     = 1
+        #RENDER_PLT_DAILY    = 2 #not implemented
+        #RENDER_PLT_HOUR     = 3 #not implemented
+        #RENDER_PYGAME_DAILY = 4 #not implemented
+        #RENDER_PYGAME_HOUR  = 5 #not implemented
+
         self.nLocation = None
         self.nHouses = None
 
@@ -97,12 +104,12 @@ class EngineEnv(gym.Env):
                          0],
                         dtype=np.float32)
 
-        self.action_space = spaces.Discrete(choices.N_CHOICES)
+        self.action_space = spaces.Discrete(choices.N_CHOICES*2-1)      # -1 for the NOOP (no counterpart)
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
 
         return
 
-    def initialize(self, virus, nHouses):
+    def initialize(self, virus, nHouses, render = None):
         
         self.nHouses = nHouses
         #if (self.nHouses == None):
@@ -112,12 +119,23 @@ class EngineEnv(gym.Env):
         self.virus = virus
 
         self.shiftQueue = []
+        if (render == None):
+            self.renderMode = self.RENDER_ALL_DAILY
+        else:
+            self.renderMode = render
 
 
     # end __init__
     ##################################################################
 
     def step(self, action):
+
+        if action==0:
+            choices.makeChoice(choices.ENACT, choices.CH_NOOP, self)
+        elif action >= 7:
+            choices.makeChoice(choices.ABOLISH, action-6, self)
+        else:
+            choices.makeChoice(choices.ENACT, action, self)
 
         start_step = time.time()
 
@@ -158,7 +176,10 @@ class EngineEnv(gym.Env):
         #print("time elapsed for day is:" + str(end_hours - start_hours))
 
         for loc in self.locs[ls.HOME]:
-            loc.eatFood()
+            if not loc.needFood():
+                loc.eatFood()
+            else:
+                self.discontent += 20
         
         start_inf = time.time()
 
@@ -177,7 +198,7 @@ class EngineEnv(gym.Env):
         #Agent Choice(Edo)
 
         self.discontent += self.daily_discontent
-        print ("Discontent of the day = " + str(self.discontent))
+        #print ("Discontent of the day = " + str(self.discontent))
 
         death_derivative+=self.deads
         statistics = stats.computeStatistics(self)
@@ -280,8 +301,9 @@ class EngineEnv(gym.Env):
                 self.walker_pool.enter(walker, self.locs[ls.GROCERIES_STORE][target])
                 #print("Ora sono a" , walker.loc)
                 food = walker.home.family_qty * random.randint(3, 7)
-                walker.home.money -= walker.loc.buyFood(food)
-                walker.home.bringFood(food)
+                if (walker.home.money >= walker.loc.buyFood(food)):
+                    walker.home.money -= walker.loc.buyFood(food)
+                    walker.home.bringFood(food)
 
         self.shiftQueue = []
 
