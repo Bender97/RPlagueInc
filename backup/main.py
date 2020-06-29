@@ -60,9 +60,9 @@ class DQNSolver:
                 # NB: non si fa uso di ricom
                 # q_update = new Q
                 # reward = ricompensa (r_t)
-                # NET_GAMMA = fattore di sconto
+                # GAMMA = fattore di sconto
 
-                q_update = (reward + param.NET_GAMMA * np.amax(temp))
+                q_update = (reward + param.GAMMA * np.amax(temp))
             
             q_values = self.model.predict(state)
 

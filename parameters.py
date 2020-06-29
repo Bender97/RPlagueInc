@@ -3,7 +3,7 @@
 # NET PARAMS
 #########################################
 
-GAMMA = 0.95
+NET_GAMMA = 0.95
 LEARNING_RATE = 0.001
 
 MEMORY_SIZE = 1000000
