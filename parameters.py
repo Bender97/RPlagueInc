@@ -40,8 +40,18 @@ INCUBATION_DURATION_RANGE = (2, 14)
 DISEASE_DURATION_RANGE = (2, 28)
 ASYMPTOMATIC_DURATION_RANGE = (7, 28)
 
+# discontent values
 FOOD_DAILY_DISCONTENT		= 100	# df
-LEISURE_DAILY_DISCONTENT	= 10
+LEISURE_DAILY_DISCONTENT	= 10	# dl
+
+MAX_MONEY_PER_HOUSE = 10000
+
+# reward weights
+ALPHA = 1
+BETA = -1
+GAMMA = 1
+DELTA = -1
+EPSILON = -1
 
 #########################################
 #########################################

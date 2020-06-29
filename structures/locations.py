@@ -88,6 +88,10 @@ class Home (Location):
         self.food_qty += food
     # end bringFood
 
+    def bringMoney(self, money):
+        new_money = self.money + money
+        self.money = min(param.MAX_MONEY_PER_HOUSE, new_money)
+
 # end class Home
 
 

@@ -9,10 +9,13 @@ def genPopulation(env):
     num_adult = -1
     num_elder = -1
 
+    env.max_pop = 0
+
     for home in env.locs[ls.HOME]:
 
         maxPeople = home.max_capacity
         generatedPeople = random.randint(1, maxPeople)
+        env.max_pop += generatedPeople
 
         for _ in range(generatedPeople):
 

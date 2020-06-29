@@ -38,14 +38,18 @@ class EngineEnv(gym.Env):
         a step(). Each step run several update() of each location
     Observation:
         Type: Box(7)
-        Num	Observation             Min         Max
-        0	Susceptibles            0           POP_NUM
-        1   Infected                0           POP_NUM
-        2   Recovered               0           POP_NUM
-        3   Deads                   0           POP_NUM
-        4   Discontent              -infinite   +infinite
-        5   Population Money Avg    0           +infinite
-        6   R0                      0           +infinite
+        Num	Observation           Symbol    Min         Max
+        0	Susceptibles          s(n)      0           POP_NUM
+        1   Infected              i(n)      0           POP_NUM
+        2   Recovered             r(n)      0           POP_NUM
+        3   Deads                 d(n)      0           POP_NUM
+        4   Discontent            D(n)      0           Dmax
+        5   Population Money Avg  M(n)      0           Mmax
+    Definitions
+        Functions   Meaning
+        h(n)        healty walkers: h(n) = s(n) + r(n)
+        [Delta i](n)  difference in infected: delta i(n) = i(n) - i(n-1)
+
     Actions:
         Type: Discrete(7)
         Num	Action
@@ -57,7 +61,8 @@ class EngineEnv(gym.Env):
         5   Close Leasures
         6   Close Workplaces
     Reward:
-        Reward = -discontent + 1/R0 - R0 - deads + Money Avg
+        Reward = alpha h_n(n) + beta [Delta i]_n(n) + gamma M_n(n) + delta D_n(n) + epsilon d_n(n)
+        Note: the normalized versions of the functions are used
     Starting State:
         Susceptibles starts from the totality of the population minus some starting infected
         Infected starts from some randomly selected
@@ -175,12 +180,17 @@ class EngineEnv(gym.Env):
         end_hours = time.time()
         #print("time elapsed for day is:" + str(end_hours - start_hours))
 
+        # update discontent for food and daily
         for loc in self.locs[ls.HOME]:
             if not loc.needFood():
                 loc.eatFood()
             else:
                 self.discontent += param.FOOD_DAILY_DISCONTENT
         
+        self.discontent += self.daily_discontent
+
+
+        # try virus events
         start_inf = time.time()
 
         for locList in self.locs:
@@ -195,61 +205,89 @@ class EngineEnv(gym.Env):
         end_inf = time.time()
         #print("time elapsed for infection is:" + str(end_inf - start_inf))
 
-        #Agent Choice(Edo)
 
-        self.discontent += self.daily_discontent
-        #print ("Discontent of the day = " + str(self.discontent))
+        ######### reward calculation #########
 
-        death_derivative+=self.deads
         statistics = stats.computeStatistics(self)
-        st = dict(statistics.items())
+
+        # get base parameters
+        s = statistics[stats.S]
+        i = statistics[stats.I]
+        r = statistics[stats.R]
+        d = statistics[stats.D]
+        M = statistics[stats.M]
+        D = self.discontent
+        
+        # compute number of healty walkers
+        h = s + r
+        # compute derivative of infected walkers
+        delta_i = i - self.yesterday_infected
+        self.yesterday_infected = i
+
+        # compute max discontent
+        discontent_max = (param.FOOD_DAILY_DISCONTENT + param.LEISURE_DAILY_DISCONTENT) * self.max_pop + choices.getMaxChoicesDiscontent()
+        money_max = self.nHouses * param.MAX_MONEY_PER_HOUSE
+
+        # compute normalized functions
+        h_n = h / self.max_pop
+        delta_i_n = delta_i / self.max_pop
+        M_n = M / money_max
+        D_n = D / discontent_max
+        d_n = d / self.max_pop
+
+        observations = [h_n, delta_i_n, M_n, D_n, d_n]
+
+        # compute reward
+        reward = param.ALPHA * h_n + param.BETA * delta_i_n + param.GAMMA * M_n + param.DELTA * D_n + param.EPSILON * d_n
+
         exist_recovered=False
         for w in self.walker_pool.walker_list:
             if w.isRecovered():
                 exist_recovered= True
                 break
         if(exist_recovered):
-            finished = self.isDone(st)
+            finished = self.isDone(statistics)
         else:
             finished = False
-        if(st[stats.R0]!=0):
-            reward = (-1/20.0)* self.discontent + (1/float(st[stats.R0])) - st[stats.R0] -(1/5.0) * death_derivative +(1/2.0)*st[stats.M]
-        else: #caso iniziale, in cui ci sono solo incubati
-            reward = (-1/20.0)* self.discontent -(1/5.0) * death_derivative +(1/2.0)*st[stats.M]
 
+        # update step values
         self.steps_done +=1
-
-        print ("discontent: " + str(self.discontent))
         self.discontent = 0
 
         end_step = time.time()
         #print("time elapsed for step is: " + str(end_step - start_step))
 
-        return list(statistics.values()), reward, finished, {}
+        return observations, reward, finished, {}
 
 
     def reset(self):
 
+        # simulation dependent variables
+        self.steps_done = 0
         self.walker_pool = WalkerPool()
-        
         self.locs = [[], [], [], [], []]
+
         reggen.regionGen(self)
 
         popgen.genPopulation(self)
 
-        self.closed_locs = []
-        self.discontent = 0
-        self.daily_discontent = 0
 
-        self.safe_dist = 0
+        # choices dependent variables
+        self.closed_locs = []
         self.quarantine = []
+        self.safe_dist = 0
 
         choices.setupChoices(self)
-
-        self.steps_done = 0
-
+        
+        # reward dependent variables
+        self.discontent = 0
+        self.daily_discontent = 0
+        self.yesterday_infected = 0
         self.deads = 0
-        self.contact_list = {}
+
+        # functions maximals
+
+
 
         # for pygame rendering
         self.screen = None
@@ -288,7 +326,7 @@ class EngineEnv(gym.Env):
                 self.walker_pool.exit(walker)
                 self.walker_pool.enter(walker, walker.workPlace)
                 salary = walker.workPlace.getSalary()
-                walker.home.money += salary
+                walker.home.bringMoney(salary)
             elif (locType == ls.SCHOOL):
                 self.walker_pool.exit(walker)
                 self.walker_pool.enter(walker, walker.school)

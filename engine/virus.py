@@ -33,10 +33,6 @@ class Virus:
                 walker.updateVirusTimer(value = random.randint(param.DISEASE_DURATION_RANGE[0], param.DISEASE_DURATION_RANGE[1]))
                 walker.loc.walkers[param.INFECTED].append(walker)
 
-                if walker.infectedBy in engine.contact_list:
-                    engine.contact_list[walker.infectedBy] += 1
-                elif walker.infectedBy != None:
-                    engine.contact_list[walker.infectedBy] = 1
                 return 1
             
             else:
@@ -61,9 +57,6 @@ class Virus:
 
         if walker.getVirusTimer() <= 0:
             walker.loc.walkers[param.INFECTED].remove(walker)
-
-            #if walker not in engine.contact_list:
-            #    engine.contact_list[walker] = 0
             
             if random.random() < (walker.pDeath + self.lethality) * self.lethality:
                 walker.setStatus(param.DEAD)

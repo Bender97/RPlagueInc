@@ -52,6 +52,7 @@ QUAR_WALKERS = 6
 FREE_WALKERS = 7
 
 # Effects of actions dictionary
+
 EFFECTS_DICT = {
     CH_MAND_MASKS: {
         ENACT   : {P_INF_MULT: 0.5 , ADD_DISCONTENT_CONST:  50, ADD_DISCONTENT_NOW: 200},
@@ -78,6 +79,18 @@ EFFECTS_DICT = {
         ABOLISH : {OPEN_LOCS: l.WORKPLACE}
     }
 }
+
+def getMaxChoicesDiscontent ():
+    discontent = 0
+    for ch in EFFECTS_DICT.values():
+        effs = ch[ENACT]
+        for eff in effs.keys():
+            if eff == ADD_DISCONTENT_CONST or eff == ADD_DISCONTENT_NOW:
+                discontent += effs[eff]
+        # end for
+    # end for
+    return discontent
+
 
 
 def setupChoices (engine):
