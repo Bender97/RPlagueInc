@@ -17,6 +17,7 @@ from keras.models import model_from_yaml
 import os
 
 import parameters as param
+import engine.envs.render as render
 
 
 class DQNSolver:
@@ -51,10 +52,8 @@ class DQNSolver:
             q_update = reward
 
             if not terminal:
-                #print("state: " + str(state))
                 temp = self.model.predict(state_next)[0] # per ogni azione nell'action space , ritorna la qualità associata
-                #print(str(temp) + " and with max: " + str(np.amax(temp)))
-                #input()
+                
                 # funzione iterativa di aggiornamento della qualità associata ad una coppia stato-azione
                 # per la formula corretta vedere https://it.wikipedia.org/wiki/Q-learning
                 # NB: non si fa uso di ricom
@@ -76,7 +75,7 @@ def cartpole():
     virus = Virus(range = param.VIRUS_RANGE, pInfection = param.VIRUS_P_INFECTION, severity = param.VIRUS_SEVERITY, lethality = param.VIRUS_LETHALITY)
     env.initialize(virus = virus, nHouses = param.N_HOUSES) 
 
-    observation_space = env.observation_space.shape[0]
+    observation_space = env.observation_space.shape[0] -1
     action_space = env.action_space.n
 
     dqn_solver = DQNSolver(observation_space, action_space)
@@ -89,6 +88,7 @@ def cartpole():
         while True:
             step += 1
             env.render()
+            print("state: " + str(state))
             action = dqn_solver.act(state)
             print(action)
             state_next, reward, terminal, info = env.step(action)

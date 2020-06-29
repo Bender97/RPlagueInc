@@ -103,6 +103,8 @@ class EngineEnv(gym.Env):
         high = np.array([1.,  1., 1., 1., 1., 1.], dtype=np.float32)
         low = np.array( [0., -1., 0., 0., 0., 0.], dtype=np.float32)
 
+        self.observations = [0, 0, 0, 0, 0]
+
         self.action_space = spaces.Discrete(choices.N_CHOICES*2-1)      # -1 for the NOOP (no counterpart)
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
 
@@ -229,7 +231,7 @@ class EngineEnv(gym.Env):
         D_n = D / discontent_max
         d_n = d / self.max_pop
 
-        observations = [h_n, delta_i_n, M_n, D_n, d_n]
+        self.observations = [h_n, delta_i_n, M_n, D_n, d_n]
 
         # compute reward
         reward = param.ALPHA * h_n + param.BETA * delta_i_n + param.GAMMA * M_n + param.DELTA * D_n + param.EPSILON * d_n
@@ -251,7 +253,7 @@ class EngineEnv(gym.Env):
         end_step = time.time()
         #print("time elapsed for step is: " + str(end_step - start_step))
 
-        return observations, reward, finished, {}
+        return self.observations, reward, finished, {}
 
 
     def reset(self):
@@ -279,10 +281,6 @@ class EngineEnv(gym.Env):
         self.yesterday_infected = 0
         self.deads = 0
 
-        # functions maximals
-
-
-
         # for pygame rendering
         self.screen = None
         self.fps = 0
@@ -292,6 +290,7 @@ class EngineEnv(gym.Env):
         self.locPos = [[], [], [], [], []]
         
         initPlt(self)
+        initPltState(self)
         initPyGame(self, border=param.BORDER, padding = param.PADDING, name_of_window='Region')
 
         statistics = list(stats.computeStatistics(self).values())
@@ -301,6 +300,7 @@ class EngineEnv(gym.Env):
     def render(self, mode='human'):
         renderFramePyGame(engine = self)
         renderFramePlt(engine = self)
+        renderFramePltState(engine = self, state = self.observations)
         #time.sleep(0.1)
 
     # def close(self):

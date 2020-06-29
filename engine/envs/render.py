@@ -6,6 +6,8 @@ import structures.locations as ls
 import parameters as param
 import os
 
+colors = ['bo-', 'ro-', 'go-', 'ko-', 'co-']
+
 def initPyGame(engine, border=20, padding=20, maxWidth = 500, name_of_window='City'):
 
     pygame.init()
@@ -59,13 +61,25 @@ def initPlt(engine):
     engine.day_counter = 0
     engine.xdata = []
     engine.ydata = [[], [], [], []]
-    #this = plt.get_current_fig_manager()
-    #this.canvas.manager.window.move(0,0)
+
+    plt.figure(1)
 
     plt.clf()
 
     plt.xlabel('number of days')
     plt.ylabel('people')
+
+def initPltState(engine):
+    engine.day_counter = 0
+    engine.xdata = []
+    engine.ydatastate = [[], [], [], [], [], []]
+
+    plt.figure(2)
+
+    plt.clf()
+
+    plt.xlabel('number of days')
+    plt.ylabel('state')
 
 
 def renderFramePlt(engine):
@@ -73,15 +87,11 @@ def renderFramePlt(engine):
 
     engine.xdata.append(engine.day_counter)
 
-    engine.ydata[0].append(statistics[0][1])
-    engine.ydata[1].append(statistics[1][1])
-    engine.ydata[2].append(statistics[2][1])
-    engine.ydata[3].append(statistics[3][1])
+    plt.figure(1)
 
-    plt.plot(engine.xdata, engine.ydata[0], 'bo-')
-    plt.plot(engine.xdata, engine.ydata[1], 'ro-')
-    plt.plot(engine.xdata, engine.ydata[2], 'go-')
-    plt.plot(engine.xdata, engine.ydata[3], 'ko-')
+    for i in range(4):
+        engine.ydata[i].append(statistics[i][1])
+        plt.plot(engine.xdata, engine.ydata[i], colors[i])
 
     engine.day_counter += 1
     plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead', 'R0: ' + str("{:.2f}".format(statistics[4][1]))))
@@ -117,4 +127,15 @@ def renderFramePyGame(engine):
 
     pygame.display.update()
     engine.fps.tick(param.FPS)
-    
+
+def renderFramePltState(engine, state):
+
+    plt.figure(2)
+
+    for i in range(5):
+        print(i)
+        engine.ydatastate[i].append(state[i])
+        plt.plot(engine.xdata, engine.ydatastate[i], colors[i])
+
+    plt.legend(loc = 'upper left', labels = ('h_n', 'delta_i_n', 'M_n', 'D_n', 'd_n'))
+    plt.pause(0.01)
