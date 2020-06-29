@@ -36,20 +36,26 @@ class EngineEnv(gym.Env):
         A region contains several locations, which contains walkers.
         The engine simulates the infection in this region. Each day is represented as
         a step(). Each step run several update() of each location
-    Observation:
-        Type: Box(7)
-        Num	Observation           Symbol    Min         Max
-        0	Susceptibles          s(n)      0           POP_NUM
-        1   Infected              i(n)      0           POP_NUM
-        2   Recovered             r(n)      0           POP_NUM
-        3   Deads                 d(n)      0           POP_NUM
-        4   Discontent            D(n)      0           Dmax
-        5   Population Money Avg  M(n)      0           Mmax
-    Definitions
+    Definitions:
+        Num	Function                Symbol      Min     Max
+        0	Susceptibles            s(n)        0       POP_NUM
+        1   Infected                i(n)        0       POP_NUM
+        2   Recovered               r(n)        0       POP_NUM
+        3   Deads                   d(n)        0       POP_NUM
+        4   Discontent              D(n)        0       Dmax
+        5   Population Money Avg    M(n)        0       Mmax
+    Other definitions:
         Functions   Meaning
         h(n)        healty walkers: h(n) = s(n) + r(n)
         [Delta i](n)  difference in infected: delta i(n) = i(n) - i(n-1)
-
+    Observations:
+        Type: Box(5)
+        Num	Observation                 Symbol              Min     Max
+        0	Healthy         (norm)      h_n(n)              0       1
+        1   Delta infected  (norm)      [Delta_i]_n(n)      -1      1
+        2   Average money   (norm)      M_n(n)              0       1
+        3   Discontent      (norm)      D_n(n)              0       1
+        4   Deads           (norm)      d_n(n)              0       1
     Actions:
         Type: Discrete(7)
         Num	Action
@@ -94,20 +100,8 @@ class EngineEnv(gym.Env):
         self.nLocation = None
         self.nHouses = None
 
-        high = np.array([np.finfo(np.float32).max,
-                         np.finfo(np.float32).max,
-                         np.finfo(np.float32).max,
-                         np.finfo(np.float32).max,
-                         np.finfo(np.float32).max,
-                         np.finfo(np.float32).max],
-                        dtype=np.float32)
-        low = np.array([0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0],
-                        dtype=np.float32)
+        high = np.array([1.,  1., 1., 1., 1., 1.], dtype=np.float32)
+        low = np.array( [0., -1., 0., 0., 0., 0.], dtype=np.float32)
 
         self.action_space = spaces.Discrete(choices.N_CHOICES*2-1)      # -1 for the NOOP (no counterpart)
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
@@ -238,7 +232,7 @@ class EngineEnv(gym.Env):
         observations = [h_n, delta_i_n, M_n, D_n, d_n]
 
         # compute reward
-        reward = param.ALPHA * h_n + param.BETA * delta_i_n + param.GAMMA * M_n + param.DELTA * D_n + param.EPSILON * d_n
+        reward = ALPHA * h_n + BETA * delta_i_n + GAMMA * M_n + DELTA * D_n + EPSILON * d_n
 
         exist_recovered=False
         for w in self.walker_pool.walker_list:
