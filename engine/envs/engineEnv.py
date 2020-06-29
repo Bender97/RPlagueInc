@@ -232,7 +232,7 @@ class EngineEnv(gym.Env):
         observations = [h_n, delta_i_n, M_n, D_n, d_n]
 
         # compute reward
-        reward = ALPHA * h_n + BETA * delta_i_n + GAMMA * M_n + DELTA * D_n + EPSILON * d_n
+        reward = param.ALPHA * h_n + param.BETA * delta_i_n + param.GAMMA * M_n + param.DELTA * D_n + param.EPSILON * d_n
 
         exist_recovered=False
         for w in self.walker_pool.walker_list:
