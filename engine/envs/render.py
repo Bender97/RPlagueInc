@@ -2,11 +2,12 @@ import pygame
 import engine.statistics as stats
 import time
 import matplotlib.pyplot as plt
+import numpy as np
 import structures.locations as ls
 import parameters as param
 import os
 
-colors = ['bo-', 'ro-', 'go-', 'ko-', 'co-']
+colors = ['b,-', 'r,-', 'g,-', 'k,-', 'c,-', 'm,-']
 
 def initPyGame(engine, border=20, padding=20, maxWidth = 500, name_of_window='City'):
 
@@ -57,72 +58,36 @@ def initPyGame(engine, border=20, padding=20, maxWidth = 500, name_of_window='Ci
 
     engine.screen = pygame.display.set_mode((engine.maxWidth, engine.maxHeight))
 
-def initPlt(engine):
-    engine.day_counter = 0
-    engine.xdata = []
-    engine.ydata = [[], [], [], []]
-
-    plt.figure(1)
-
+def initPlt(engine, figure, xlabel, ylabel, n_subplots):
+    
+    plt.figure(figure).show()
     plt.clf()
+    engine.figs[figure] = []
 
-    plt.xlabel('number of days')
-    plt.ylabel('people')
+    for i in range(n_subplots):
+        engine.figs[figure].append(plt.plot([], [], colors[i])[0])
 
-def initPltState(engine):
-    engine.day_counter = 0
-    engine.xdata = []
-    engine.ydatastate = [[], [], [], [], [], []]
-
-    plt.figure(2)
-
-    plt.clf()
-
-    plt.xlabel('number of days')
-    plt.ylabel('state')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
 
 
-def renderFramePlt(engine):
-    statistics_dict = stats.computeStatistics(engine)
+def renderFramePlt(engine, figure, new_xdata, new_ydata, labels):
+    
+    fig = plt.figure(figure)
 
-    to_graph = [stats.S, stats.I, stats.R, stats.D]
-    statistics = [statistics_dict[k] for k in to_graph]
+    for i in range(len(new_ydata)):
+        line = engine.figs[figure][i]
+        line.set_xdata(np.append(line.get_xdata(), new_xdata))
+        line.set_ydata(np.append(line.get_ydata(), new_ydata[i]))
+        line.axes.relim()
+        line.axes.autoscale_view()
 
-    engine.xdata.append(engine.day_counter)
 
-    plt.figure(1)
+    plt.legend(loc = 'upper left', labels = labels)
 
-    for i in range(len(to_graph)):
-        engine.ydata[i].append(statistics[i])
-        plt.plot(engine.xdata, engine.ydata[i], colors[i])
+    fig.canvas.draw()
+    fig.canvas.flush_events()
 
-    engine.day_counter += 1
-    plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation: '+ str(statistics[0]),
-                                             'infected (disease): '                       + str(statistics[1]),
-                                             'recovered: '                                + str(statistics[2]),
-                                             'dead: '                                     + str(statistics[3])))
-    plt.pause(0.01)
-
-def renderFramePlt_new(engine):
-    statistics_dict = list(stats.computeStatistics(engine).values())
-
-    to_graph = [stats.S, stats.I, stats.R, stats.D]
-    statistics = [statistics_dict[k] for k in to_graph]
-
-    engine.xdata.append(engine.day_counter)
-
-    plt.figure(1)
-
-    for i in range(len(to_graph)):
-        engine.ydata[i].append(statistics[i])
-        plt.plot(engine.xdata, engine.ydata[i], colors[i])
-
-    engine.day_counter += 1
-    plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation: '+ str(statistics[0]),
-                                             'infected (disease): '                       + str(statistics[1]),
-                                             'recovered: '                                + str(statistics[2]),
-                                             'dead: '                                     + str(statistics[3])))
-    plt.pause(0.01)
 
 def renderFramePyGame(engine):
 
@@ -154,20 +119,3 @@ def renderFramePyGame(engine):
 
     pygame.display.update()
     engine.fps.tick(param.FPS)
-
-def renderFramePltState(engine, state):
-
-    plt.figure(2)
-
-    for i in range(5):
-        print(i)
-        engine.ydatastate[i].append(state[i])
-        plt.plot(engine.xdata, engine.ydatastate[i], colors[i])
-
-    plt.legend(loc = 'upper left', labels = ('h_n: '        + str("{:.2f}".format(state[0])),
-                                             'delta_i_n: '  + str("{:.2f}".format(state[1])),
-                                             'M_n: '        + str("{:.2f}".format(state[2])),
-                                             'D_n: '        + str("{:.2f}".format(state[3])),
-                                             'd_n: '        + str("{:.2f}".format(state[4])),
-                                             'reward: '     + str("{:.2f}".format(state[5]))))
-    plt.pause(0.01)

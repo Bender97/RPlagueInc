@@ -227,6 +227,7 @@ class EngineEnv(gym.Env):
         # compute normalized functions
         h_n = h / self.max_pop
         delta_i_n = delta_i / self.max_pop
+        delta_i_n = delta_i_n if delta_i_n > 0 else param.CURVE * delta_i_n
         M_n = M / money_max
         D_n = D / discontent_max
         d_n = d / self.max_pop
@@ -289,8 +290,23 @@ class EngineEnv(gym.Env):
         # calculate position on screen for each location
         self.locPos = [[], [], [], [], []]
         
-        initPlt(self)
-        initPltState(self)
+        # initialize plots
+        self.figs = {}
+
+        initPlt(engine = self,
+                figure = 1,
+                xlabel = 'days',
+                ylabel = 'population',
+                n_subplots = 4
+                )
+        
+        initPlt(engine = self,
+                figure = 2,
+                xlabel = 'days',
+                ylabel = 'status',
+                n_subplots = 6
+                )
+        
         initPyGame(self, border=param.BORDER, padding = param.PADDING, name_of_window='Region')
 
         statistics = list(stats.computeStatistics(self).values())
@@ -299,18 +315,48 @@ class EngineEnv(gym.Env):
 
     def render(self, mode='human'):
         renderFramePyGame(engine = self)
-        renderFramePlt(engine = self)
+
+        statistics_dict = stats.computeStatistics(self)
+
+        to_graph = [stats.S, stats.I, stats.R, stats.D]
+        statistics = [statistics_dict[k] for k in to_graph]
+
+        renderFramePlt(engine = self,
+                       figure = 1,
+                       new_xdata = self.steps_done,
+                       new_ydata = statistics,
+                       labels = (   
+                            'susceptibles + asymptomatics + incubation: '+ str(statistics[0]),
+                            'infected (disease): '                       + str(statistics[1]),
+                            'recovered: '                                + str(statistics[2]),
+                            'dead: '                                     + str(statistics[3])
+                            )
+                       )
 
         # scale the observations to compose the graphs
-        graphs = self.observations.copy()
-        graphs[0] *= param.ALPHA
-        graphs[1] *= param.BETA
-        graphs[2] *= param.GAMMA
-        graphs[3] *= param.DELTA
-        graphs[4] *= param.EPSILON
-        graphs.append(sum(graphs))
-
-        renderFramePltState(engine = self, state = graphs)
+        statuses = self.observations.copy()
+        statuses[0] *= param.ALPHA
+        statuses[1] *= param.BETA
+        statuses[2] *= param.GAMMA
+        statuses[3] *= param.DELTA
+        statuses[4] *= param.EPSILON
+        statuses.append(sum(statuses))
+        
+        renderFramePlt(engine = self,
+                       figure = 2,
+                       new_xdata = self.steps_done,
+                       new_ydata = statuses,
+                       labels = (
+                            'h_n: '        + str("{:.2f}".format(statuses[0])),
+                            'delta_i_n: '  + str("{:.2f}".format(statuses[1])),
+                            'M_n: '        + str("{:.2f}".format(statuses[2])),
+                            'D_n: '        + str("{:.2f}".format(statuses[3])),
+                            'd_n: '        + str("{:.2f}".format(statuses[4])),
+                            'reward: '     + str("{:.2f}".format(statuses[5]))
+                            )
+                       )
+        
+        #renderFramePltState(engine = self, state = graphs)
         #time.sleep(0.1)
 
     # def close(self):
