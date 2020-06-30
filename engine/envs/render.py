@@ -83,6 +83,27 @@ def initPltState(engine):
 
 
 def renderFramePlt(engine):
+    statistics_dict = stats.computeStatistics(engine)
+
+    to_graph = [stats.S, stats.I, stats.R, stats.D]
+    statistics = [statistics_dict[k] for k in to_graph]
+
+    engine.xdata.append(engine.day_counter)
+
+    plt.figure(1)
+
+    for i in range(len(to_graph)):
+        engine.ydata[i].append(statistics[i])
+        plt.plot(engine.xdata, engine.ydata[i], colors[i])
+
+    engine.day_counter += 1
+    plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation: '+ str(statistics[0]),
+                                             'infected (disease): '                       + str(statistics[1]),
+                                             'recovered: '                                + str(statistics[2]),
+                                             'dead: '                                     + str(statistics[3])))
+    plt.pause(0.01)
+
+def renderFramePlt_new(engine):
     statistics_dict = list(stats.computeStatistics(engine).values())
 
     to_graph = [stats.S, stats.I, stats.R, stats.D]
