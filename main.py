@@ -70,7 +70,7 @@ class DQNSolver:
         self.exploration_rate *= param.EXPLORATION_DECAY
         self.exploration_rate = max(param.EXPLORATION_MIN, self.exploration_rate)
 
-def cartpole():
+def simulation():
     env = gym.make(param.ENV_NAME)
     virus = Virus(range = param.VIRUS_RANGE, pInfection = param.VIRUS_P_INFECTION, severity = param.VIRUS_SEVERITY, lethality = param.VIRUS_LETHALITY)
     env.initialize(virus = virus, nHouses = param.N_HOUSES) 
@@ -131,4 +131,4 @@ def cartpole():
 
 
 if __name__ == "__main__":
-    cartpole()
+    simulation()

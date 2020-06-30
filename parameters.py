@@ -29,10 +29,10 @@ MODEL_PATH 	= "model.h5"
 ENV_NAME = "engine-v0"
 
 INITIAL_CASES 	= 2
-N_HOUSES 		= 40
+N_HOUSES 		= 10
 
 VIRUS_RANGE 		= 2
-VIRUS_P_INFECTION 	= 0.1
+VIRUS_P_INFECTION 	= 0.6
 VIRUS_SEVERITY 		= 0.2
 VIRUS_LETHALITY 	= 0.1
 
@@ -47,11 +47,11 @@ LEISURE_DAILY_DISCONTENT	= 10	# dl
 MAX_MONEY_PER_HOUSE = 10000
 
 # reward weights
-ALPHA = 1
-BETA = -1
-GAMMA = 1
-DELTA = -1
-EPSILON = -1
+ALPHA = 10
+BETA = -1000
+GAMMA = 100
+DELTA = -10
+EPSILON = -10
 
 #########################################
 #########################################

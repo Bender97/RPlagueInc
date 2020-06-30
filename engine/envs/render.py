@@ -83,18 +83,24 @@ def initPltState(engine):
 
 
 def renderFramePlt(engine):
-    statistics = list(stats.computeStatistics(engine).items())
+    statistics_dict = list(stats.computeStatistics(engine).values())
+
+    to_graph = [stats.S, stats.I, stats.R, stats.D]
+    statistics = [statistics_dict[k] for k in to_graph]
 
     engine.xdata.append(engine.day_counter)
 
     plt.figure(1)
 
-    for i in range(4):
-        engine.ydata[i].append(statistics[i][1])
+    for i in range(len(to_graph)):
+        engine.ydata[i].append(statistics[i])
         plt.plot(engine.xdata, engine.ydata[i], colors[i])
 
     engine.day_counter += 1
-    plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation', 'infected (disease)', 'recovered', 'dead', 'R0: ' + str("{:.2f}".format(statistics[4][1]))))
+    plt.legend(loc = 'upper left', labels = ('susceptibles + asymptomatics + incubation: '+ str(statistics[0]),
+                                             'infected (disease): '                       + str(statistics[1]),
+                                             'recovered: '                                + str(statistics[2]),
+                                             'dead: '                                     + str(statistics[3])))
     plt.pause(0.01)
 
 def renderFramePyGame(engine):
@@ -137,5 +143,10 @@ def renderFramePltState(engine, state):
         engine.ydatastate[i].append(state[i])
         plt.plot(engine.xdata, engine.ydatastate[i], colors[i])
 
-    plt.legend(loc = 'upper left', labels = ('h_n', 'delta_i_n', 'M_n', 'D_n', 'd_n'))
+    plt.legend(loc = 'upper left', labels = ('h_n: '        + str("{:.2f}".format(state[0])),
+                                             'delta_i_n: '  + str("{:.2f}".format(state[1])),
+                                             'M_n: '        + str("{:.2f}".format(state[2])),
+                                             'D_n: '        + str("{:.2f}".format(state[3])),
+                                             'd_n: '        + str("{:.2f}".format(state[4])),
+                                             'reward: '     + str("{:.2f}".format(state[5]))))
     plt.pause(0.01)
