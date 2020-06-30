@@ -1,6 +1,7 @@
 import pygame
 import engine.statistics as stats
 import time
+import random
 import matplotlib.pyplot as plt
 import numpy as np
 import structures.locations as ls
@@ -67,6 +68,7 @@ def initPlt(engine, figure, xlabel, ylabel, n_subplots):
     for i in range(n_subplots):
         engine.figs[figure].append(plt.plot([], [], colors[i])[0])
 
+    plt.axhline(y=0, color='grey', linestyle='--')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
 
@@ -84,6 +86,18 @@ def renderFramePlt(engine, figure, new_xdata, new_ydata, labels):
 
 
     plt.legend(loc = 'upper left', labels = labels)
+
+    if engine.choice_str != None:
+
+        vline_color = 'red' if engine.choice_str[1] else 'blue'
+
+        _, _, ymin, ymax = plt.axis()
+
+        text_pos = random.uniform(ymin, ymax)
+
+        plt.axvline(x=new_xdata, color=vline_color)
+        plt.text(x=new_xdata, y=text_pos, s=engine.choice_str[0], color=vline_color, fontsize='xx-small')
+
 
     fig.canvas.draw()
     fig.canvas.flush_events()

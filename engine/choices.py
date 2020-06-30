@@ -124,6 +124,7 @@ def makeChoice (type, choice, engine):
         applyEffect(e, effects[e], engine)
 
     print("Choice " + CH_STR[choice] + " was " + ACT_STR[type])
+    engine.choice_str = [CH_STR[choice] + '\n' + ACT_STR[type], type == ENACT]
 
     # publish enact/abolish on the engine choices
     effect_result = type == ENACT

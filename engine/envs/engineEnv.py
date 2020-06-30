@@ -266,6 +266,7 @@ class EngineEnv(gym.Env):
         self.steps_done = 0
         self.walker_pool = WalkerPool()
         self.locs = [[], [], [], [], []]
+        self.choice_str = None
 
         reggen.regionGen(self)
 
@@ -359,7 +360,7 @@ class EngineEnv(gym.Env):
                             )
                        )
         
-        #renderFramePltState(engine = self, state = graphs)
+        self.choice_str = None
         #time.sleep(0.1)
 
     # def close(self):
