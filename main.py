@@ -75,33 +75,39 @@ def simulation():
     virus = Virus(range = param.VIRUS_RANGE, pInfection = param.VIRUS_P_INFECTION, severity = param.VIRUS_SEVERITY, lethality = param.VIRUS_LETHALITY)
     env.initialize(virus = virus, nHouses = param.N_HOUSES) 
 
-    observation_space = env.observation_space.shape[0] -1
+    observation_space = env.observation_space.shape[0]
     action_space = env.action_space.n
 
     dqn_solver = DQNSolver(observation_space, action_space)
-    run = 0
+    epoch = 0
     while True:
-        run += 1
+        epoch += 1
         state = env.reset()
         state = np.reshape(state, [1, observation_space])
         step = 0
+        acc_reward = 0
+
         while True:
             step += 1
             env.render()
-            print("state: " + str(state))
             action = dqn_solver.act(state)
-            print(action)
             state_next, reward, terminal, info = env.step(action)
-            reward = reward if not terminal else -reward
+            print ("Step: " + str(step) + ", Reward: " + str(reward))
+
+            acc_reward += reward
+
             state_next = np.reshape(state_next, [1, observation_space])
             dqn_solver.remember(state, action, reward, state_next, terminal)
             state = state_next
+
             if terminal:
-                print("Run: " + str(run) + ", exploration: " + str(dqn_solver.exploration_rate) + ", score: " + str(step))
-                
+                print("Epoch: " + str(epoch) + ", exploration: " + str(dqn_solver.exploration_rate) + ", score: " + str(acc_reward / step))
                 break
+
+
             dqn_solver.experience_replay()
-        if (step>1000):
+
+        if (epoch > param.EPOCHS):
             # serialize model to YAML
             model_yaml = dqn_solver.model.to_yaml()
             with open(param.YAML_PATH, "w") as yaml_file:
@@ -110,24 +116,6 @@ def simulation():
             dqn_solver.model.save_weights(param.MODEL_PATH)
             print("Saved model to disk")
             exit()
-            run += 1
-            state = env.reset()
-            state = np.reshape(state, [1, observation_space])
-            step = 0
-            while True:
-                step += 1
-                env.render()
-                time.sleep(0.02)
-                action = dqn_solver.predict(state)
-                state_next, reward, terminal, info = env.step(action)
-                reward = reward if not terminal else -reward
-                state_next = np.reshape(state_next, [1, observation_space])
-                dqn_solver.remember(state, action, reward, state_next, terminal)
-                state = state_next
-                if terminal:
-                    print("Run: " + str(run) + ", exploration: " + str(dqn_solver.exploration_rate) + ", score: " + str(step))
-                    break
-                dqn_solver.experience_replay()
 
 
 if __name__ == "__main__":

@@ -100,10 +100,8 @@ class EngineEnv(gym.Env):
         self.nLocation = None
         self.nHouses = None
 
-        high = np.array([1.,  1., 1., 1., 1., 1.], dtype=np.float32)
-        low = np.array( [0., -1., 0., 0., 0., 0.], dtype=np.float32)
-
-        self.observations = [0, 0, 0, 0, 0]
+        high = np.array([1.,  1., 1., 1., 1.], dtype=np.float32)
+        low = np.array( [0., -1., 0., 0., 0.], dtype=np.float32)
 
         self.action_space = spaces.Discrete(choices.N_CHOICES*2-1)      # -1 for the NOOP (no counterpart)
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
@@ -128,6 +126,57 @@ class EngineEnv(gym.Env):
 
     # end __init__
     ##################################################################
+
+    def computeReward(self):
+        statistics = stats.computeStatistics(self)
+
+        # get base parameters
+        s = statistics[stats.S]
+        i = statistics[stats.I]
+        r = statistics[stats.R]
+        d = statistics[stats.D]
+        M = statistics[stats.M]
+        D = self.discontent
+        
+        # compute number of healty walkers
+        h = s + r
+        # compute derivative of infected walkers
+        delta_i = i - self.yesterday_infected
+        self.yesterday_infected = i
+
+        # compute max discontent
+        discontent_max = (param.FOOD_DAILY_DISCONTENT + param.LEISURE_DAILY_DISCONTENT) * self.max_pop + choices.getMaxChoicesDiscontent()
+        money_max = self.nHouses * param.MAX_MONEY_PER_HOUSE
+
+        # define functions
+        def parametric_relu(x, w):
+            return x if x > 0 else w*x
+
+        # compute normalized functions
+        h_n = h / self.max_pop
+        delta_i_n = parametric_relu(delta_i / self.max_pop, param.RELU_PARAM)
+        M_n = M / money_max
+        D_n = D / discontent_max
+        d_n = d / self.max_pop
+
+        self.observations = [h_n, delta_i_n, M_n, D_n, d_n]
+
+        # compute reward
+        reward = param.ALPHA * h_n + param.BETA * delta_i_n + param.GAMMA * M_n + param.DELTA * D_n + param.EPSILON * d_n
+
+        exist_recovered=False
+        for w in self.walker_pool.walker_list:
+            if w.isRecovered():
+                exist_recovered= True
+                break
+        if(exist_recovered):
+            finished = self.isDone()
+        else:
+            finished = False
+
+        return self.observations, reward, finished, {}
+
+
 
     def step(self, action):
 
@@ -204,60 +253,13 @@ class EngineEnv(gym.Env):
 
         ######### reward calculation #########
 
-        statistics = stats.computeStatistics(self)
-
-        # get base parameters
-        s = statistics[stats.S]
-        i = statistics[stats.I]
-        r = statistics[stats.R]
-        d = statistics[stats.D]
-        M = statistics[stats.M]
-        D = self.discontent
-        
-        # compute number of healty walkers
-        h = s + r
-        # compute derivative of infected walkers
-        delta_i = i - self.yesterday_infected
-        self.yesterday_infected = i
-
-        # compute max discontent
-        discontent_max = (param.FOOD_DAILY_DISCONTENT + param.LEISURE_DAILY_DISCONTENT) * self.max_pop + choices.getMaxChoicesDiscontent()
-        money_max = self.nHouses * param.MAX_MONEY_PER_HOUSE
-
-        # define functions
-        def parametric_relu(x, w):
-            return x if x > 0 else w*x
-
-        # compute normalized functions
-        h_n = h / self.max_pop
-        delta_i_n = parametric_relu(delta_i / self.max_pop, param.RELU_PARAM)
-        M_n = M / money_max
-        D_n = D / discontent_max
-        d_n = d / self.max_pop
-
-        self.observations = [h_n, delta_i_n, M_n, D_n, d_n]
-
-        # compute reward
-        reward = param.ALPHA * h_n + param.BETA * delta_i_n + param.GAMMA * M_n + param.DELTA * D_n + param.EPSILON * d_n
-
-        exist_recovered=False
-        for w in self.walker_pool.walker_list:
-            if w.isRecovered():
-                exist_recovered= True
-                break
-        if(exist_recovered):
-            finished = self.isDone(statistics)
-        else:
-            finished = False
+        return_values = self.computeReward()
 
         # update step values
         self.steps_done +=1
         self.discontent = 0
 
-        end_step = time.time()
-        #print("time elapsed for step is: " + str(end_step - start_step))
-
-        return self.observations, reward, finished, {}
+        return return_values
 
 
     def reset(self):
@@ -267,6 +269,7 @@ class EngineEnv(gym.Env):
         self.walker_pool = WalkerPool()
         self.locs = [[], [], [], [], []]
         self.choice_str = None
+        self.observations = [0, 0, 0, 0, 0]
 
         reggen.regionGen(self)
 
@@ -313,9 +316,7 @@ class EngineEnv(gym.Env):
         
         initPyGame(self, border=param.BORDER, padding = param.PADDING, name_of_window='Region')
 
-        statistics = list(stats.computeStatistics(self).values())
-
-        return statistics
+        return self.computeReward()[0]
 
     def render(self, mode='human'):
         renderFramePyGame(engine = self)
@@ -402,8 +403,5 @@ class EngineEnv(gym.Env):
         self.shiftQueue = []
 
 
-    def isDone(self, st):
-        if st[stats.I]==0 or self.walker_pool.getWalkerNum() == 0: #se tutti muoiono, o il virus si ferma, ridà true
-            return True
-        else:
-            return False
+    def isDone(self):
+        return not stats.isThereAnyInfected(self)

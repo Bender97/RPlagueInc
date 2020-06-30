@@ -39,3 +39,13 @@ def computeStatistics(engine):
     return statistics
 
 # end computeStatistics
+
+def isThereAnyInfected(engine):
+    for locList in engine.locs:
+        for loc in locList:
+            infected = len(loc.walkers[param.INFECTED]) + len(loc.walkers[param.ASYMPTOMATIC]) + len(loc.walkers[param.INCUBATION])
+            if infected > 0:
+                return True
+        # end for
+    # end for
+    return False
