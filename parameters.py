@@ -47,13 +47,13 @@ LEISURE_DAILY_DISCONTENT	= 10	# dl
 MAX_MONEY_PER_HOUSE = 10000
 
 # infection delta curve param
-CURVE = 0.2
+RELU_PARAM = 0.2
 
 # reward weights
 ALPHA = 10
-BETA = -500
+BETA = -100
 GAMMA = 100
-DELTA = -10
+DELTA = -20
 EPSILON = -10
 
 #########################################

@@ -224,10 +224,13 @@ class EngineEnv(gym.Env):
         discontent_max = (param.FOOD_DAILY_DISCONTENT + param.LEISURE_DAILY_DISCONTENT) * self.max_pop + choices.getMaxChoicesDiscontent()
         money_max = self.nHouses * param.MAX_MONEY_PER_HOUSE
 
+        # define functions
+        def parametric_relu(x, w):
+            return x if x > 0 else w*x
+
         # compute normalized functions
         h_n = h / self.max_pop
-        delta_i_n = delta_i / self.max_pop
-        delta_i_n = delta_i_n if delta_i_n > 0 else param.CURVE * delta_i_n
+        delta_i_n = parametric_relu(delta_i / self.max_pop, param.RELU_PARAM)
         M_n = M / money_max
         D_n = D / discontent_max
         d_n = d / self.max_pop
