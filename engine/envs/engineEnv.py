@@ -300,17 +300,7 @@ class EngineEnv(gym.Env):
     def render(self, mode='human'):
         renderFramePyGame(engine = self)
         renderFramePlt(engine = self)
-
-        # scale the observations to compose the graphs
-        graphs = self.observations.copy()
-        graphs[0] *= param.ALPHA
-        graphs[1] *= param.BETA
-        graphs[2] *= param.GAMMA
-        graphs[3] *= param.DELTA
-        graphs[4] *= param.EPSILON
-        graphs.append(sum(graphs))
-
-        renderFramePltState(engine = self, state = graphs)
+        renderFramePltState(engine = self, state = self.observations)
         #time.sleep(0.1)
 
     # def close(self):
