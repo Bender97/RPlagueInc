@@ -1,3 +1,12 @@
+import sys
+import os
+
+old_stdout = sys.stdout
+sys.stdout = open(os.devnull, "w")
+old_stderr = sys.stderr
+sys.stderr = open(os.devnull, "w")
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import random
 import gym
 import engine.envs.engineEnv
@@ -14,11 +23,9 @@ from keras.optimizers import Adam
 
 # for storing the NN weights
 from keras.models import model_from_yaml
-import os
 
 import parameters as param
 import engine.envs.render as render
-
 
 class DQNSolver:
 
@@ -71,6 +78,7 @@ class DQNSolver:
         self.exploration_rate = max(param.EXPLORATION_MIN, self.exploration_rate)
 
 def simulation():
+
     env = gym.make(param.ENV_NAME)
     virus = Virus(range = param.VIRUS_RANGE, pInfection = param.VIRUS_P_INFECTION, severity = param.VIRUS_SEVERITY, lethality = param.VIRUS_LETHALITY)
     env.initialize(virus = virus, nHouses = param.N_HOUSES) 
@@ -80,6 +88,10 @@ def simulation():
 
     dqn_solver = DQNSolver(observation_space, action_space)
     epoch = 0
+
+    sys.stdout = old_stdout
+    sys.stderr = old_stderr
+
     while True:
         epoch += 1
         state = env.reset()
@@ -92,7 +104,8 @@ def simulation():
             env.render()
             action = dqn_solver.act(state)
             state_next, reward, terminal, info = env.step(action)
-            print ("Step: " + str(step) + ", Reward: " + str(reward))
+            sys.stdout.write("\rStep: " + str(step) + ", Reward: " + str(reward))
+            sys.stdout.flush()
 
             acc_reward += reward
 
@@ -101,13 +114,13 @@ def simulation():
             state = state_next
 
             if terminal:
-                print("Epoch: " + str(epoch) + ", exploration: " + str(dqn_solver.exploration_rate) + ", score: " + str(acc_reward / step))
+                print("\nEpoch: " + str(epoch) + ", exploration: " + str(dqn_solver.exploration_rate) + ", score: " + str(acc_reward / step))
                 break
 
 
             dqn_solver.experience_replay()
 
-        if (epoch > param.EPOCHS):
+        if (epoch >= param.EPOCHS):
             # serialize model to YAML
             model_yaml = dqn_solver.model.to_yaml()
             with open(param.YAML_PATH, "w") as yaml_file:
@@ -115,7 +128,7 @@ def simulation():
             # serialize weights to HDF5
             dqn_solver.model.save_weights(param.MODEL_PATH)
             print("Saved model to disk")
-            exit()
+            return
 
 
 if __name__ == "__main__":

@@ -95,7 +95,7 @@ def renderFramePlt(engine, figure, new_xdata, new_ydata, labels):
 
         text_pos = random.uniform(ymin, ymax)
 
-        plt.axvline(x=new_xdata, color=vline_color)
+        plt.axvline(x=new_xdata, color=vline_color, linewidth=0.5)
         plt.text(x=new_xdata, y=text_pos, s=engine.choice_str[0], color=vline_color, fontsize='xx-small')
 
 

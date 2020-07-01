@@ -127,7 +127,7 @@ class EngineEnv(gym.Env):
     # end __init__
     ##################################################################
 
-    def computeReward(self):
+    def computeReward(self, action_applied = False):
         statistics = stats.computeStatistics(self)
 
         # get base parameters
@@ -164,6 +164,12 @@ class EngineEnv(gym.Env):
         # compute reward
         reward = param.ALPHA * h_n + param.BETA * delta_i_n + param.GAMMA * M_n + param.DELTA * D_n + param.EPSILON * d_n
 
+        # add action done penalty
+        if action_applied:
+            reward += param.ZETA
+
+        self.reward = reward
+
         exist_recovered=False
         for w in self.walker_pool.walker_list:
             if w.isRecovered():
@@ -180,12 +186,14 @@ class EngineEnv(gym.Env):
 
     def step(self, action):
 
+        ch_applied = False
+
         if action==0:
-            choices.makeChoice(choices.ENACT, choices.CH_NOOP, self)
+            ch_applied = choices.makeChoice(choices.ENACT, choices.CH_NOOP, self)
         elif action >= 7:
-            choices.makeChoice(choices.ABOLISH, action-6, self)
+            ch_applied = choices.makeChoice(choices.ABOLISH, action-6, self)
         else:
-            choices.makeChoice(choices.ENACT, action, self)
+            ch_applied = choices.makeChoice(choices.ENACT, action, self)
 
         start_step = time.time()
 
@@ -253,7 +261,7 @@ class EngineEnv(gym.Env):
 
         ######### reward calculation #########
 
-        return_values = self.computeReward()
+        return_values = self.computeReward(ch_applied)
 
         # update step values
         self.steps_done +=1
@@ -270,6 +278,7 @@ class EngineEnv(gym.Env):
         self.locs = [[], [], [], [], []]
         self.choice_str = None
         self.observations = [0, 0, 0, 0, 0]
+        self.reward = 0
 
         reggen.regionGen(self)
 
@@ -345,7 +354,7 @@ class EngineEnv(gym.Env):
         statuses[2] *= param.GAMMA
         statuses[3] *= param.DELTA
         statuses[4] *= param.EPSILON
-        statuses.append(sum(statuses))
+        statuses.append(self.reward)
         
         renderFramePlt(engine = self,
                        figure = 2,

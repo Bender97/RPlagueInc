@@ -110,11 +110,11 @@ def makeChoice (type, choice, engine):
 
     # if the choice is noop don't do anything
     if choice == CH_NOOP:
-        return None
+        return False
 
     # if the choice to enact is already in effect or the choice to abolish is not in effect then exit (NO OP)
     if (type == ENACT and engine.in_effect[choice]) or (type == ABOLISH and not engine.in_effect[choice]):
-        return None
+        return False
 
     # get effects on choice
     effects = EFFECTS_DICT[choice][type]
@@ -123,12 +123,14 @@ def makeChoice (type, choice, engine):
     for e in effects.keys():
         applyEffect(e, effects[e], engine)
 
-    print("Choice " + CH_STR[choice] + " was " + ACT_STR[type])
+    #print("Choice " + CH_STR[choice] + " was " + ACT_STR[type])
     engine.choice_str = [CH_STR[choice] + '\n' + ACT_STR[type], type == ENACT]
 
     # publish enact/abolish on the engine choices
     effect_result = type == ENACT
     engine.in_effect[choice] = effect_result
+
+    return True
 
 # end makeChoice
 
