@@ -180,13 +180,15 @@ class EngineEnv(gym.Env):
         else:
             finished = False
 
-        return self.observations, reward, finished, {}
+        return self.observations, reward, finished
 
 
 
     def step(self, action):
 
         ch_applied = False
+
+        # 0 -> noop, 1-6 -> ENACT, 7-12 -> ABOLISH
 
         if action==0:
             ch_applied = choices.makeChoice(choices.ENACT, choices.CH_NOOP, self)
@@ -261,13 +263,15 @@ class EngineEnv(gym.Env):
 
         ######### reward calculation #########
 
-        return_values = self.computeReward(ch_applied)
+        observations, reward, finished = self.computeReward(ch_applied)
 
         # update step values
         self.steps_done +=1
         self.discontent = 0
 
-        return return_values
+        choices_mask = choices.getChoicesMask(self)
+
+        return observations, reward, finished, {'allowed_choices': choices_mask}
 
 
     def reset(self):
@@ -319,7 +323,9 @@ class EngineEnv(gym.Env):
         
         initPyGame(self, border=param.BORDER, padding = param.PADDING, name_of_window='Region')
 
-        return self.computeReward()[0]
+        choices_mask = choices.getChoicesMask(self)
+
+        return self.computeReward()[0], {'allowed_choices': choices_mask}
 
     def render(self, mode='human'):
         renderFramePyGame(engine = self)

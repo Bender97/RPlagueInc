@@ -57,11 +57,23 @@ class DQNSolver:
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
-    def act(self, state):
+    def act(self, state, available_choices):
+
+        # if the DQN has to explore, choose a random choice from the available
         if self.in_training and np.random.rand() < self.exploration_rate:
-            return random.randrange(self.action_space)
+            ch = [k for k in range(len(available_choices)) if available_choices[k]]
+
+            return random.choice(ch)
+
+        # compute the mask as the logical inverse of available choices
+        array_action_mask = np.logical_not(available_choices)
+        # predict the Q values
         q_values = self.model.predict(state)
-        return np.argmax(q_values[0])
+        # mask the available choices and fill the not available with NaN
+        q_values = np.ma.masked_array(data=q_values[0], mask=array_action_mask, fill_value=np.nan)
+        # return the argmax of the non NaN values
+        choice = np.nanargmax(q_values)
+        return choice
 
 
     def write_model(self):
@@ -128,7 +140,7 @@ def simulation():
 
     while True:
         epoch += 1
-        curr_state = env.reset()
+        curr_state, info = env.reset()
         state = deque()
         for k in range(param.STATUS_WINDOW):
             state.append(curr_state)
@@ -143,7 +155,10 @@ def simulation():
 
             array_state = np.reshape(list(state), (1, param.STATUS_WINDOW, observation_space))
 
-            action = dqn_solver.act(array_state)
+            print(info['allowed_choices'])
+
+            action = dqn_solver.act(array_state, info['allowed_choices'])
+
             curr_state_next, reward, terminal, info = env.step(action)
             sys.stdout.write("\rStep: " + str(step) + ", Reward: " + str(reward))
             sys.stdout.flush()

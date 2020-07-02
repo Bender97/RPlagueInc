@@ -91,6 +91,18 @@ def getMaxChoicesDiscontent ():
     # end for
     return discontent
 
+def getChoicesMask (engine):
+    # 0 -> noop, 1-6 -> ENACT, 7-12 -> ABOLISH
+    # set noop to allowed
+    choices_mask = [True]
+    for value in engine.in_effect.values():
+        choices_mask.append(not value)
+
+    for value in engine.in_effect.values():
+        choices_mask.append(value)
+
+    return choices_mask
+
 
 
 def setupChoices (engine):
