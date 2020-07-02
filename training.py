@@ -82,6 +82,8 @@ class DQNSolver:
 
         # predict the Q values
         q_values = self.predictQValues(state, available_choices)
+
+        print(q_values)
         
         choice = np.nanargmax(q_values)
         return choice
@@ -213,7 +215,9 @@ def simulation():
             array_state_next = np.reshape(list(state_next), (1, param.STATUS_WINDOW, observation_space))
 
             #state_next = np.reshape(state_next, [1, observation_space])
-            dqn_solver.remember(array_state, action, reward, terminal, info['allowed_choices'])
+            if (np.count_nonzero(info['allowed_choices']) > 1):
+                print("memorized")
+                dqn_solver.remember(array_state, action, reward, terminal, info['allowed_choices'])
             state = state_next
 
             if terminal:

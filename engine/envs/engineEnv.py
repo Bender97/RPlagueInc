@@ -106,7 +106,7 @@ class EngineEnv(gym.Env):
         self.action_space = spaces.Discrete(choices.N_CHOICES*2-1)      # -1 for the NOOP (no counterpart)
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
 
-        return
+
 
     def initialize(self, virus, nHouses, render = None):
 

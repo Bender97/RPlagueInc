@@ -3,7 +3,7 @@
 # NET PARAMS
 #########################################
 
-NET_GAMMA = 0.95
+NET_GAMMA = 0.9
 LEARNING_RATE = 0.001
 
 EPOCHS = 20
@@ -11,7 +11,7 @@ EPOCHS = 20
 MEMORY_SIZE = 20000
 BATCH_SIZE = 32
 STATUS_WINDOW = 6
-N_STEPS = 30
+N_STEPS = 10
 
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.01
@@ -34,6 +34,7 @@ ENV_NAME = "engine-v0"
 
 INITIAL_CASES 	= 5
 N_HOUSES 		= 100
+MEASURE_DURATION= 14
 
 VIRUS_RANGE 		= 2
 VIRUS_P_INFECTION 	= 0.3
@@ -60,7 +61,7 @@ GAMMA = 600 # M(n) mean wealth
 DELTA = -30 # D(n) discontent
 EPSILON = -20 # d(n) deads
 ZETA = -300 # delta d(n) deads gradient
-ACT_PENALTY = -10 # choice taken in turn n
+ACT_PENALTY = 0 # choice taken in turn n
 
 #########################################
 #########################################

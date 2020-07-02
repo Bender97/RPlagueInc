@@ -95,11 +95,19 @@ def getChoicesMask (engine):
     # 0 -> noop, 1-6 -> ENACT, 7-12 -> ABOLISH
     # set noop to allowed
     choices_mask = [True]
-    for value in engine.in_effect.values():
-        choices_mask.append(not value)
 
-    for value in engine.in_effect.values():
-        choices_mask.append(value)
+    effects = list(engine.in_effect.values())
+    durations = list(engine.meas_durations.values())
+
+    for i in range(len(effects)):
+        # allowed if it is not in effect and the duration reached 0
+        allowed = not effects[i] and durations[i] == 0
+        choices_mask.append(allowed)
+
+    for i in range(len(effects)):
+        # allowed if it is in effect and the duration reached 0
+        allowed = effects[i] and durations[i] == 0
+        choices_mask.append(allowed)
 
     return choices_mask
 
@@ -107,9 +115,11 @@ def getChoicesMask (engine):
 
 def setupChoices (engine):
     ch_effects = {}
+    durations = {}
 
     for e in EFFECTS_DICT.keys():
         ch_effects[e] = False
+        durations[e] = 0
 
     # choices dependent variables
     engine.daily_discontent = 0
@@ -119,6 +129,7 @@ def setupChoices (engine):
     engine.virus.masks_malus = 1.
 
     engine.in_effect = ch_effects
+    engine.meas_durations = durations
 # end setupChoices
 
 def isEnacted (choice, engine):
@@ -127,13 +138,18 @@ def isEnacted (choice, engine):
 
 def makeChoice (type, choice, engine):
 
+    # for each measure reduce by 1 day of duration
+    for k in engine.meas_durations.keys():
+        if engine.meas_durations[k] > 0:
+            engine.meas_durations[k] -= 1
+
     # if the choice is noop don't do anything
     if choice == CH_NOOP:
         return False
 
     # if the choice to enact is already in effect or the choice to abolish is not in effect then exit (NO OP)
     if (type == ENACT and engine.in_effect[choice]) or (type == ABOLISH and not engine.in_effect[choice]):
-        return True
+        return False
 
     # get effects on choice
     effects = EFFECTS_DICT[choice][type]
@@ -148,6 +164,7 @@ def makeChoice (type, choice, engine):
     # publish enact/abolish on the engine choices
     effect_result = type == ENACT
     engine.in_effect[choice] = effect_result
+    engine.meas_durations[choice] = param.MEASURE_DURATION
 
     return True
 
