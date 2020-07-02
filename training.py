@@ -155,8 +155,6 @@ def simulation():
 
             array_state = np.reshape(list(state), (1, param.STATUS_WINDOW, observation_space))
 
-            print(info['allowed_choices'])
-
             action = dqn_solver.act(array_state, info['allowed_choices'])
 
             curr_state_next, reward, terminal, info = env.step(action)
