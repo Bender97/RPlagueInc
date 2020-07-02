@@ -109,7 +109,7 @@ class EngineEnv(gym.Env):
         return
 
     def initialize(self, virus, nHouses, render = None):
-        
+
         self.nHouses = nHouses
         #if (self.nHouses == None):
         #    print("error: nHouses is None. Have you called reset() before calling initialize()?")
@@ -283,12 +283,6 @@ class EngineEnv(gym.Env):
         reggen.regionGen(self)
 
         popgen.genPopulation(self)
-
-
-        # choices dependent variables
-        self.closed_locs = []
-        self.quarantine = []
-        self.safe_dist = 0
 
         choices.setupChoices(self)
         

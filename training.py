@@ -18,7 +18,7 @@ import numpy as np
 from collections import deque
 
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Conv1D, MaxPooling1D, Flatten, Dropout
 from keras.optimizers import Adam
 
 # for storing the NN weights
@@ -27,31 +27,65 @@ from keras.models import model_from_yaml
 import parameters as param
 import engine.envs.render as render
 
+sys.stdout = old_stdout
+sys.stderr = old_stderr
+
 class DQNSolver:
 
-    def __init__(self, observation_space, action_space):
+    def __init__(self, in_training):
+        self.in_training = in_training
+        
+
+    def compile_model(self, observation_space, action_space):
         self.exploration_rate = param.EXPLORATION_MAX
 
         self.action_space = action_space
         self.memory = deque(maxlen=param.MEMORY_SIZE)
 
         self.model = Sequential()
-        self.model.add(Dense(10, input_shape=(observation_space,), activation="relu"))
-        self.model.add(Dense(10, activation="relu"))
+        self.model.add(Conv1D(filters=64, kernel_size=3, input_shape=observation_space, activation="relu"))
+        self.model.add(Conv1D(filters=64, kernel_size=3, activation="relu"))
+        self.model.add(MaxPooling1D(pool_size=2))
+        self.model.add(Flatten())
+        self.model.add(Dropout(0.25))
+        self.model.add(Dense(50, activation="relu"))
+        self.model.add(Dropout(0.5))
         self.model.add(Dense(self.action_space, activation="linear"))
         self.model.compile(loss="mse", optimizer=Adam(lr=param.LEARNING_RATE))
+        self.model.summary()
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
-        if np.random.rand() < self.exploration_rate:
+        if self.in_training and np.random.rand() < self.exploration_rate:
             return random.randrange(self.action_space)
         q_values = self.model.predict(state)
         return np.argmax(q_values[0])
 
+
+    def write_model(self):
+        # serialize model to YAML
+        model_yaml = self.model.to_yaml()
+        with open(param.YAML_PATH, "w") as yaml_file:
+            yaml_file.write(model_yaml)
+        # serialize weights to HDF5
+        self.model.save_weights(param.MODEL_PATH)
+
+
+    def read_model(self):
+        yaml_file = open(param.YAML_PATH, 'r')
+        loaded_model_yaml = yaml_file.read()
+        yaml_file.close()
+        loaded_model = model_from_yaml(loaded_model_yaml)
+        # load weights into new model
+        loaded_model.load_weights(param.MODEL_PATH)
+        self.model = loaded_model
+        self.model.summary()
+
+
     def experience_replay(self):
-        if len(self.memory) < param.BATCH_SIZE:   # le prime venti iterazioni le fa a vuoto: non impara niente (BATCH_SIZE = 20)
+        if len(self.memory) < param.BATCH_SIZE:   # le prime venti iterazioni le fa a vuoto: non impara niente
             return
         batch = random.sample(self.memory, param.BATCH_SIZE)
         for state, action, reward, state_next, terminal in batch:
@@ -60,7 +94,7 @@ class DQNSolver:
 
             if not terminal:
                 temp = self.model.predict(state_next)[0] # per ogni azione nell'action space , ritorna la qualità associata
-                
+
                 # funzione iterativa di aggiornamento della qualità associata ad una coppia stato-azione
                 # per la formula corretta vedere https://it.wikipedia.org/wiki/Q-learning
                 # NB: non si fa uso di ricom
@@ -74,6 +108,7 @@ class DQNSolver:
 
             q_values[0][action] = q_update
             self.model.fit(state, q_values, verbose=0)
+
         self.exploration_rate *= param.EXPLORATION_DECAY
         self.exploration_rate = max(param.EXPLORATION_MIN, self.exploration_rate)
 
@@ -86,31 +121,43 @@ def simulation():
     observation_space = env.observation_space.shape[0]
     action_space = env.action_space.n
 
-    dqn_solver = DQNSolver(observation_space, action_space)
-    epoch = 0
+    dqn_solver = DQNSolver(True)
+    dqn_solver.compile_model((param.STATUS_WINDOW, observation_space), action_space)
 
-    sys.stdout = old_stdout
-    sys.stderr = old_stderr
+    epoch = 0
 
     while True:
         epoch += 1
-        state = env.reset()
-        state = np.reshape(state, [1, observation_space])
+        curr_state = env.reset()
+        state = deque()
+        for k in range(param.STATUS_WINDOW):
+            state.append(curr_state)
+        # end for
+
         step = 0
         acc_reward = 0
 
         while True:
             step += 1
             env.render()
-            action = dqn_solver.act(state)
-            state_next, reward, terminal, info = env.step(action)
+
+            array_state = np.reshape(list(state), (1, param.STATUS_WINDOW, observation_space))
+
+            action = dqn_solver.act(array_state)
+            curr_state_next, reward, terminal, info = env.step(action)
             sys.stdout.write("\rStep: " + str(step) + ", Reward: " + str(reward))
             sys.stdout.flush()
 
+            state_next = state.copy()
+            state_next.popleft()
+            state_next.append(curr_state_next)
+
             acc_reward += reward
 
-            state_next = np.reshape(state_next, [1, observation_space])
-            dqn_solver.remember(state, action, reward, state_next, terminal)
+            array_state_next = np.reshape(list(state_next), (1, param.STATUS_WINDOW, observation_space))
+
+            #state_next = np.reshape(state_next, [1, observation_space])
+            dqn_solver.remember(array_state, action, reward, array_state_next, terminal)
             state = state_next
 
             if terminal:
@@ -121,12 +168,7 @@ def simulation():
             dqn_solver.experience_replay()
 
         if (epoch >= param.EPOCHS):
-            # serialize model to YAML
-            model_yaml = dqn_solver.model.to_yaml()
-            with open(param.YAML_PATH, "w") as yaml_file:
-                yaml_file.write(model_yaml)
-            # serialize weights to HDF5
-            dqn_solver.model.save_weights(param.MODEL_PATH)
+            dqn_solver.write_model()
             print("Saved model to disk")
             return
 

@@ -99,6 +99,13 @@ def setupChoices (engine):
     for e in EFFECTS_DICT.keys():
         ch_effects[e] = False
 
+    # choices dependent variables
+    engine.daily_discontent = 0
+    engine.closed_locs = []
+    engine.quarantine = []
+    engine.safe_dist = 0
+    engine.virus.masks_malus = 1.
+
     engine.in_effect = ch_effects
 # end setupChoices
 
@@ -114,7 +121,7 @@ def makeChoice (type, choice, engine):
 
     # if the choice to enact is already in effect or the choice to abolish is not in effect then exit (NO OP)
     if (type == ENACT and engine.in_effect[choice]) or (type == ABOLISH and not engine.in_effect[choice]):
-        return False
+        return True
 
     # get effects on choice
     effects = EFFECTS_DICT[choice][type]
@@ -137,7 +144,7 @@ def makeChoice (type, choice, engine):
 def applyEffect (effect, value, engine):
 
     if effect == P_INF_MULT:
-        engine.virus.pInfection *= value
+        engine.virus.masks_malus *= value
 
     elif effect == ADD_DISCONTENT_NOW:
         engine.discontent += value
