@@ -11,6 +11,7 @@ EPOCHS = 20
 MEMORY_SIZE = 20000
 BATCH_SIZE = 32
 STATUS_WINDOW = 6
+N_STEPS = 30
 
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.01
@@ -54,11 +55,12 @@ RELU_PARAM = 0.2
 
 # reward weights
 ALPHA = 10 # h(n) susc. + recov.
-BETA = -200 # delta i(n) infected gradient
+BETA = -100 # delta i(n) infected gradient
 GAMMA = 600 # M(n) mean wealth
 DELTA = -30 # D(n) discontent
-EPSILON = -100 # d(n) deads
-ZETA = -2 # choice taken in turn n
+EPSILON = -20 # d(n) deads
+ZETA = -300 # delta d(n) deads gradient
+ACT_PENALTY = -10 # choice taken in turn n
 
 #########################################
 #########################################

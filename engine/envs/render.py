@@ -8,7 +8,7 @@ import structures.locations as ls
 import parameters as param
 import os
 
-colors = ['b,-', 'r,-', 'g,-', 'k,-', 'c,-', 'm,-']
+colors = ['b,-', 'r,-', 'g,-', 'k,-', 'c,-', 'm,-', 'y,-']
 
 def initPyGame(engine, border=20, padding=20, maxWidth = 500, name_of_window='City'):
 

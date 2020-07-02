@@ -100,8 +100,8 @@ class EngineEnv(gym.Env):
         self.nLocation = None
         self.nHouses = None
 
-        high = np.array([1.,  1., 1., 1., 1.], dtype=np.float32)
-        low = np.array( [0., -1., 0., 0., 0.], dtype=np.float32)
+        high = np.array([1., 1., 1., 1., 1., 1.], dtype=np.float32)
+        low = np.array( [0., 0., 0., 0., 0., 0.], dtype=np.float32)
 
         self.action_space = spaces.Discrete(choices.N_CHOICES*2-1)      # -1 for the NOOP (no counterpart)
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
@@ -143,6 +143,9 @@ class EngineEnv(gym.Env):
         # compute derivative of infected walkers
         delta_i = i - self.yesterday_infected
         self.yesterday_infected = i
+        # compute derivative of dead walkers
+        delta_d = d - self.yesterday_deads
+        self.yesterday_deads = d
 
         # compute max discontent
         discontent_max = (param.FOOD_DAILY_DISCONTENT + param.LEISURE_DAILY_DISCONTENT) * self.max_pop + choices.getMaxChoicesDiscontent()
@@ -153,20 +156,27 @@ class EngineEnv(gym.Env):
             return x if x > 0 else w*x
 
         # compute normalized functions
-        h_n = h / self.max_pop
-        delta_i_n = parametric_relu(delta_i / self.max_pop, param.RELU_PARAM)
+        s_n = s / self.max_pop
+        i_n = i / self.max_pop
+        r_n = r / self.max_pop
+        d_n = d / self.max_pop
         M_n = M / money_max
         D_n = D / discontent_max
-        d_n = d / self.max_pop
 
-        self.observations = [h_n, delta_i_n, M_n, D_n, d_n]
+        h_n = h / self.max_pop
+        delta_i_n = parametric_relu(delta_i / self.max_pop, param.RELU_PARAM)
+        delta_d_n = delta_d / self.max_pop
+        
+
+        self.observations = [s_n, i_n, r_n, d_n, M_n, D_n]
+        self.obs_reward = [h_n, delta_i_n, M_n, D_n, d_n, delta_d_n]
 
         # compute reward
-        reward = param.ALPHA * h_n + param.BETA * delta_i_n + param.GAMMA * M_n + param.DELTA * D_n + param.EPSILON * d_n
+        reward = param.ALPHA * h_n + param.BETA * delta_i_n + param.GAMMA * M_n + param.DELTA * D_n + param.EPSILON * d_n + param.ZETA * delta_d_n
 
         # add action done penalty
         if action_applied:
-            reward += param.ZETA
+            reward += param.ACT_PENALTY
 
         self.reward = reward
 
@@ -281,7 +291,8 @@ class EngineEnv(gym.Env):
         self.walker_pool = WalkerPool()
         self.locs = [[], [], [], [], []]
         self.choice_str = None
-        self.observations = [0, 0, 0, 0, 0]
+        self.observations = [0, 0, 0, 0, 0, 0]
+        self.obs_reward = [0, 0, 0, 0, 0, 0]
         self.reward = 0
 
         reggen.regionGen(self)
@@ -294,6 +305,7 @@ class EngineEnv(gym.Env):
         self.discontent = 0
         self.daily_discontent = 0
         self.yesterday_infected = 0
+        self.yesterday_deads = 0
         self.deads = 0
 
         # for pygame rendering
@@ -318,7 +330,7 @@ class EngineEnv(gym.Env):
                 figure = 2,
                 xlabel = 'days',
                 ylabel = 'status',
-                n_subplots = 6
+                n_subplots = 7
                 )
         
         initPyGame(self, border=param.BORDER, padding = param.PADDING, name_of_window='Region')
@@ -348,12 +360,13 @@ class EngineEnv(gym.Env):
                        )
 
         # scale the observations to compose the graphs
-        statuses = self.observations.copy()
+        statuses = self.obs_reward.copy()
         statuses[0] *= param.ALPHA
         statuses[1] *= param.BETA
         statuses[2] *= param.GAMMA
         statuses[3] *= param.DELTA
         statuses[4] *= param.EPSILON
+        statuses[5] *= param.ZETA
         statuses.append(self.reward)
         
         renderFramePlt(engine = self,
@@ -366,7 +379,8 @@ class EngineEnv(gym.Env):
                             'M_n: '        + str("{:.2f}".format(statuses[2])),
                             'D_n: '        + str("{:.2f}".format(statuses[3])),
                             'd_n: '        + str("{:.2f}".format(statuses[4])),
-                            'reward: '     + str("{:.2f}".format(statuses[5]))
+                            'delta_d_n: '  + str("{:.2f}".format(statuses[5])),
+                            'reward: '     + str("{:.2f}".format(statuses[6]))
                             )
                        )
         
